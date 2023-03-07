@@ -56,7 +56,7 @@ Run following to create a Kind cluster called `azd-aks` using config file from [
 kind create cluster --name azd-aks --config ./local/kind-cluster-config.yaml
 ```
 
-This is going to request KiND to spin up a kubernetes cluster comprised of a control plane and two worker nodes. 
+This is going to request KiND to spin up a kubernetes cluster comprised of a control plane and two worker nodes.
 It also allows for future setup of ingresses and exposes container ports to the host machine.
 
 ```bash
@@ -119,8 +119,56 @@ dapr-operator          dapr-system  True     Running  1         1.10.2   10m  20
 dapr-sidecar-injector  dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
 ```
 
-You can validate that the setup finished successfully by navigating to http://localhost:9999. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
+You can validate that the setup finished successfully by navigating to <http://localhost:9999>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
 
 ```bash
 dapr dashboard -k -p 9999
+```
+
+### 3. Deploy Dapr Pub/Sub Broker (Redis)
+
+Dapr Pub/Sub Broker uses [Redis](https://redis.io/) as a pub/sub broker.
+First we create a `redis.yaml` under `./local/components` folder to define Pub/Sub Broker:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+  # These settings will work out of the box if you use `helm install
+  # bitnami/redis`.  If you have your own setup, replace
+  # `redis-master:6379` with your own Redis master address, and the
+  # Redis password with your own Secret's name. For more information,
+  # see https://docs.dapr.io/operations/components/component-secrets .
+  - name: redisHost
+    value: redis-master:6379
+  - name: redisPassword
+    secretKeyRef:
+      name: redis
+      key: redis-password
+auth:
+  secretStore: kubernetes
+```
+
+Run the following command to deploy Redis as Pub/Sub Broker on the Kind cluster:
+
+```bash
+k apply -f ./local/components/redis.yaml
+```
+
+To verify the installation of pub/sub broker run:
+
+```bash
+dapr components -k
+```
+
+This should output something similar to below. Alternatively, you can check the status of the component in the Dapr dashboard `http://localhost:9999/components`:
+
+```bash
+NAMESPACE  NAME    TYPE          VERSION  SCOPES  CREATED              AGE  
+default    pubsub  pubsub.redis  v1               2023-03-07 15:02.34  3m  
 ```
