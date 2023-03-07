@@ -118,3 +118,9 @@ dapr-placement-server  dapr-system  True     Running  1         1.10.2   10m  20
 dapr-operator          dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
 dapr-sidecar-injector  dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
 ```
+
+You can validate that the setup finished successfully by navigating to http://localhost:9999. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
+
+```bash
+dapr dashboard -k -p 9999
+```
