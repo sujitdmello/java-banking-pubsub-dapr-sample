@@ -25,7 +25,7 @@ The project contains the following services:
 - [Fraud Service](/src/fraud-service) - Fraud service that checks the legitimacy of the operation.
 - [Account Service](/src/account-service) - Account service that checks if `Sender` has enough funds.
 - [Custody Service](/src/custody-service) - Custody service that moves `Amount` from `Sender` to `Receiver`.
-- [Notification Service](/src/notification-service) - Notification service that notifies both `Sender` and `Receiver`.
+- [Notification Service](/src/notification-service) - Notification service that notifies both `Sender` and `Receiver` by updating/inserting transfer requests in the Public APIs database.
 
 ## Prerequisites
 
