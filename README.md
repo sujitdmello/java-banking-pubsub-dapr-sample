@@ -21,7 +21,7 @@ This sample implements a simple banking workflow:
 
 The project contains the following services:
 
-- [Public API](/src/public-api) - Public API endpoint that receives new money transfer requests, starts workflow and checks customer notifications.
+- [Public API](/src/public-api-service) - Public API endpoint that receives new money transfer requests, starts workflow and checks customer notifications.
 - [Fraud Service](/src/fraud-service) - Fraud service that checks the legitimacy of the operation.
 - [Account Service](/src/account-service) - Account service that checks if `Sender` has enough funds.
 - [Custody Service](/src/custody-service) - Custody service that moves `Amount` from `Sender` to `Receiver`.
@@ -171,4 +171,47 @@ This should output something similar to below. Alternatively, you can check the 
 ```bash
 NAMESPACE  NAME    TYPE          VERSION  SCOPES  CREATED              AGE  
 default    pubsub  pubsub.redis  v1               2023-03-07 15:02.34  3m  
+```
+
+### 4. Create Public API to Receive Money Transfer Requests
+
+We are using [Spring Boot](https://spring.io/projects/spring-boot) to create a public API to receive money transfer requests.
+
+
+#### 4.1. Create Spring Boot Project
+
+Head over to [Spring Initializer](https://start.spring.io/) and create a new project with the following settings:
+
+- Project: Gradle Groovy
+- Language: Java
+- Spring Boot: (LATEST)
+- Project Metadata:
+  - Group: com.azd-aks
+  - Artifact: public-api-service
+  - Name: public-api-service
+  - Description: Money Transfer API
+  - Package Name: com.azd-aks.public-api-service
+  - Packaging: Jar
+  - Java: 17
+
+Add the following dependencies:
+
+- Lombok
+
+Click on `Generate` to download the project and extract it to `./src/public-api-service` folder.
+
+
+#### 4.2. Add Dapr JAVA SDK
+
+Add the following dependency to `./src/public-api-service/build.gradle` file under `dependencies` section:
+
+```groovy
+dependencies {
+...
+    // Dapr's core SDK with all features, except Actors.
+    compile('io.dapr:dapr-sdk:1.7.1')
+    
+    // Dapr's SDK integration with SpringBoot (optional).
+    compile('io.dapr:dapr-sdk-springboot:1.7.1')
+}
 ```
