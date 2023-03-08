@@ -4,6 +4,10 @@ plugins {
 	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
 }
 
+group = 'com.azd-aks'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
 /**
  * app.jar is the archive produced by the bootJar task.
  * This is a Spring Boot fat jar that contains all of the module's dependencies as well as its classes and resources.
@@ -15,10 +19,6 @@ plugins {
 jar {
 	enabled = false
 }
-
-group = 'com.azd-aks'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
 
 configurations {
 	compileOnly {
