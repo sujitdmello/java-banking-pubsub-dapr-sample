@@ -2,7 +2,9 @@ package com.azdaks.publicapiservice.controller;
 
 import com.azdaks.publicapiservice.model.TransferRequest;
 import com.azdaks.publicapiservice.model.TransferResponse;
+import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.CloudEvent;
+import io.dapr.client.domain.Metadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import java.time.Duration;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static java.util.Collections.singletonMap;
 
 @RestController
 public class TransfersController {
@@ -54,11 +58,12 @@ public class TransfersController {
 
         try {
             /**
-             * The official Dapr Java SDK does not support latest reactor version.
-             * Instead, we go with HTTP client.
+             * The official Dapr Java SDK does not support the latest reactor version in Spring Boot 3+
+             * Instead, we go with HTTP client to publish events to Dapr Pub/Sub for Spring Boot 3+
              * https://github.com/dapr/java-sdk/issues/815
              */
-            ///client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest, singletonMap(Metadata.TTL_IN_SECONDS, MESSAGE_TTL_IN_SECONDS)).block();
+            var client = new DaprClientBuilder().build();
+            client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest).block();
 
 //            CloudEvent cloudEvent = new CloudEvent();
 //            cloudEvent.setData(transferRequest);
@@ -70,16 +75,16 @@ public class TransfersController {
 
 
                     // Publish an event/message using Dapr PubSub via HTTP Post
-            HttpRequest request = HttpRequest.newBuilder()
-                    .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(transferRequest)))
-                    .uri(URI.create(pubsubUri))
-                    .header("Content-Type", "application/json")
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            logger.info(String.valueOf(response.statusCode()));
-            logger.info(response.body());
+//            HttpRequest request = HttpRequest.newBuilder()
+//                    .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(transferRequest)))
+//                    .uri(URI.create(pubsubUri))
+//                    .header("Content-Type", "application/json")
+//                    .build();
+//
+//            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//            logger.info(String.valueOf(response.statusCode()));
+//            logger.info(response.body());
 
 
         } catch (Exception e) {
@@ -95,6 +100,8 @@ public class TransfersController {
                 .status(status.toString())
                 .transactionId(transactionId)
                 .build();
+
+        logger.info("Transfer Request Published");
 
         return status == HttpStatus.ACCEPTED ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }

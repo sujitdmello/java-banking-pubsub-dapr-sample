@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: node
-        image: localhost:5001/public-api-service:1.4
+        image: localhost:5001/public-api-service:1.5
         env:
         - name: APP_PORT
           value: "8080"
