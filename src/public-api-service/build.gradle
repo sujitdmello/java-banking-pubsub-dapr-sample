@@ -37,10 +37,14 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	// Dapr's core SDK with all features, except Actors.
-	implementation 'io.dapr:dapr-sdk:1.8.0'
+	implementation 'io.dapr:dapr-sdk:1.7.1'
 
 	// Dapr's SDK integration with SpringBoot (optional).
-	implementation 'io.dapr:dapr-sdk-springboot:1.8.0'
+	implementation 'io.dapr:dapr-sdk-springboot:1.7.1'
+
+	ext['reactor-bom.version'] = '2020.0.25'
+
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
 }
 
 tasks.named('test') {

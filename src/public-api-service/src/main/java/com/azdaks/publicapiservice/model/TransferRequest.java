@@ -2,9 +2,11 @@ package com.azdaks.publicapiservice.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.jackson.Jacksonized;
 
 @Getter
 @Setter
+@Jacksonized
 public class TransferRequest {
     private String sender;
     private String receiver;

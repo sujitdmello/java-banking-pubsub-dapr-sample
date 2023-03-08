@@ -1,14 +1,3 @@
-kind: Pod
-apiVersion: v1
-metadata:
-  name: public-api-service
-  labels:
-    app: public-api-service
-spec:
-  containers:
-  - name: public-api-service
-    image: localhost:5001/public-api-service
----
 kind: Service
 apiVersion: v1
 metadata:
@@ -41,16 +30,16 @@ spec:
         app: public-api-service
       annotations:
         dapr.io/enabled: "true"
-        dapr.io/app-id: "public-api-service"
-        dapr.io/app-port: "3000"
+        dapr.io/app-id: "money-transfer-app"
+        dapr.io/app-port: "8080"
         dapr.io/enable-api-logging: "true"
     spec:
       containers:
       - name: node
-        image: localhost:5001/public-api-service
+        image: localhost:5001/public-api-service:1.3
         env:
         - name: APP_PORT
-          value: "3000"
+          value: "8080"
         ports:
-        - containerPort: 3000
+        - containerPort: 80
         imagePullPolicy: Always

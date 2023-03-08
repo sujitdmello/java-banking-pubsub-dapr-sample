@@ -176,13 +176,13 @@ The following line tags the build using the -t flag and specifies the local repo
 
 ```bash
 cd ./src/public-api-service
-docker build -t localhost:5001/public-api-service:latest .
+docker build -t localhost:5001/public-api-service:0.1 .
 ```
 
 At this point, we have a Docker container built and tagged. Next we can push it to our local repository with the docker push command.
 
 ```bash
-docker push localhost:5001/public-api-service:latest
+docker push localhost:5001/public-api-service:0.1
 ```
 
 #### 4.2 Deploy Public API Service to Cluster

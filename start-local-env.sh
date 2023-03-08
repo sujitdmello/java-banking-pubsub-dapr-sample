@@ -23,6 +23,11 @@ fi
 printf '\n📀 map the local registry to cluster\n\n'
 kubectl apply -f ./local/deployments/config-map.yaml --wait=true
 
+
+printf '\n📀 install redis\n\n'
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install redis bitnami/redis
+
 printf '\n📀 init dapr\n\n'
 dapr init --kubernetes --wait --timeout 600
 
