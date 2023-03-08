@@ -60,20 +60,20 @@ public class TransfersController {
              */
             ///client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest, singletonMap(Metadata.TTL_IN_SECONDS, MESSAGE_TTL_IN_SECONDS)).block();
 
-            CloudEvent cloudEvent = new CloudEvent();
-            cloudEvent.setData(transferRequest);
-            cloudEvent.setType("com.dapr.cloudevent.sent");
-            cloudEvent.setId(transactionId);
-            cloudEvent.setSource("money-transfer-app");
-            cloudEvent.setSpecversion("1.0");
-            cloudEvent.setDatacontenttype("application/cloudevents+json");
+//            CloudEvent cloudEvent = new CloudEvent();
+//            cloudEvent.setData(transferRequest);
+//            cloudEvent.setType("com.dapr.cloudevent.sent");
+//            cloudEvent.setId(transactionId);
+//            cloudEvent.setSource("money-transfer-app");
+//            cloudEvent.setSpecversion("1.0");
+//            cloudEvent.setDatacontenttype("application/cloudevents+json");
 
 
                     // Publish an event/message using Dapr PubSub via HTTP Post
             HttpRequest request = HttpRequest.newBuilder()
-                    .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(cloudEvent)))
+                    .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(transferRequest)))
                     .uri(URI.create(pubsubUri))
-                    .header("Content-Type", "application/cloudevents+json")
+                    .header("Content-Type", "application/json")
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
