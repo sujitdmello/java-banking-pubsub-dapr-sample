@@ -4,6 +4,18 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.0'
 }
 
+/**
+ * app.jar is the archive produced by the bootJar task.
+ * This is a Spring Boot fat jar that contains all of the module's dependencies as well as its classes and resources.
+ * It can be run using java -jar.
+ * app-plain.jar is the archive produced by the jar task.
+ * This is a plain or standard jar file that contains only the module's classes and resources.
+ * You can learn a bit more about this in the documentation for Spring Boot's Gradle plugin.
+ */
+jar {
+	enabled = false
+}
+
 group = 'com.azd-aks'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'

@@ -1,0 +1,56 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: public-api-service
+  labels:
+    app: public-api-service
+spec:
+  containers:
+  - name: public-api-service
+    image: localhost:5001/public-api-service
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: public-api-service
+  labels:
+    app: public-api-service
+spec:
+  selector:
+    app: public-api-service
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-api-service
+  labels:
+    app: public-api-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: public-api-service
+  template:
+    metadata:
+      labels:
+        app: public-api-service
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "public-api-service"
+        dapr.io/app-port: "3000"
+        dapr.io/enable-api-logging: "true"
+    spec:
+      containers:
+      - name: node
+        image: localhost:5001/public-api-service
+        env:
+        - name: APP_PORT
+          value: "3000"
+        ports:
+        - containerPort: 3000
+        imagePullPolicy: Always

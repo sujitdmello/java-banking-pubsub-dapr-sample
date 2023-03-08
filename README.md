@@ -48,6 +48,16 @@ Make an alias for `kubectl` so the next set of commands are easier to read:
 alias k='kubectl'
 ```
 
+### 0. Local Image Registry
+
+One of the challenges in using Kubernetes for local development is getting local Docker containers you create during development to your Kubernetes cluster. Configuring this correctly allows Kubernetes to access any Docker images you create locally when deploying your Pods and Services to the cluster you created using kind.
+
+The following script creates a Docker registry called `kind-registry` running locally on port 9999. This script first inspects the current environment to check if we already have a local registry running, and if we do not, then we start a new registry. The registry itself is simply an instance of the registry Docker image available on Docker Hub. We use the docker run command to start the registry.
+
+```bash
+./local/create-registry.sh
+```
+
 ### 1. Create Kind Cluster (Local k8s Cluster)
 
 Run following to create a Kind cluster called `azd-aks` using config file from [kind-cluster-config.yaml](/local/kind-cluster-config.yaml):
@@ -82,6 +92,13 @@ kube-system          kube-proxy-wss4d                                1/1     Run
 kube-system          kube-scheduler-azd-aks-control-plane            1/1     Running   0          28s
 local-path-storage   local-path-provisioner-684f458cdd-t2fp6         1/1     Running   0          13s
 ```
+
+The last step we have is to connect the kind cluster’s network with the local Docker registry’s network:
+
+```bash
+docker network connect "kind" "kind-registry"
+ ```
+
 
 ### 2. Install Dapr on Kind Cluster
 
@@ -119,41 +136,16 @@ dapr-operator          dapr-system  True     Running  1         1.10.2   10m  20
 dapr-sidecar-injector  dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
 ```
 
-You can validate that the setup finished successfully by navigating to <http://localhost:9999>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
+You can validate that the setup finished successfully by navigating to <http://localhost:9000>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
 
 ```bash
-dapr dashboard -k -p 9999
+dapr dashboard -k -p 9000
 ```
 
 ### 3. Deploy Dapr Pub/Sub Broker (Redis)
 
 Dapr Pub/Sub Broker uses [Redis](https://redis.io/) as a pub/sub broker.
-First we create a `redis.yaml` under `./local/components` folder to define Pub/Sub Broker:
-
-```yaml
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: pubsub
-spec:
-  type: pubsub.redis
-  version: v1
-  metadata:
-  # These settings will work out of the box if you use `helm install
-  # bitnami/redis`.  If you have your own setup, replace
-  # `redis-master:6379` with your own Redis master address, and the
-  # Redis password with your own Secret's name. For more information,
-  # see https://docs.dapr.io/operations/components/component-secrets .
-  - name: redisHost
-    value: redis-master:6379
-  - name: redisPassword
-    secretKeyRef:
-      name: redis
-      key: redis-password
-auth:
-  secretStore: kubernetes
-```
-
+A `redis.yaml` under `./local/components` folder to define Pub/Sub Broker was created in the repo.
 Run the following command to deploy Redis as Pub/Sub Broker on the Kind cluster:
 
 ```bash
@@ -171,4 +163,53 @@ This should output something similar to below. Alternatively, you can check the 
 ```bash
 NAMESPACE  NAME    TYPE          VERSION  SCOPES  CREATED              AGE  
 default    pubsub  pubsub.redis  v1               2023-03-07 15:02.34  3m  
+```
+
+### 4. Deploy Public API Service to Cluster
+
+We will deploy a public API service to the cluster. This service will be exposed as load balancer service type.
+
+#### 4.1. Build and Push Docker Image to Local Registry
+
+You can build public-api-service as a Docker container using the docker build command.
+The following line tags the build using the -t flag and specifies the local repository we created earlier.
+
+```bash
+cd ./src/public-api-service
+docker build -t localhost:5001/public-api-service:latest .
+```
+
+At this point, we have a Docker container built and tagged. Next we can push it to our local repository with the docker push command.
+
+```bash
+docker push localhost:5001/public-api-service:latest
+```
+
+#### 4.2 Deploy Public API Service to Cluster
+
+At the root of the project:
+
+```bash
+k apply -f ./local/deployments/public-api-service.yaml
+```
+
+This will output something like below:
+
+```bash
+service/public-api created
+deployment.apps/public-api created
+```
+
+You can check the deployment status of the public-api service by running:
+
+```bash
+k get pods -A
+```
+
+#### 4.3. Expose Public API Service
+
+Loadbalancer service type you will not able to get public ip because you're running it locally and instead you can access this service locally using the Kubectl proxy tool.
+
+```bash
+k port-forward service/public-api-service 8080:80
 ```
