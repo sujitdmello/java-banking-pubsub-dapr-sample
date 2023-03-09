@@ -42,13 +42,7 @@ Following technologies and CLIs are used for the development. Follow the links t
 
 ## Local Dev Environment Setup
 
-Local environment is setup using [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/). Kind is a tool for running local Kubernetes clusters using Docker container "nodes".
-
-Make an alias for `kubectl` so the next set of commands are easier to read:
-
-```bash
-alias k='kubectl'
-```
+Local environment is setup using [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/). Kind is a tool for running local Kubernetes clusters using Docker container "nodes". Kind was primarily designed for testing Kubernetes itself, but may be used for local development or CI.
 
 ### 1. Local Environment Setup
 
