@@ -5,7 +5,7 @@ version=$(date +%Y.%m.%d.%H.%M.%S)
 printf "\n🛖  Releasing version: %s\n\n" "${version}"
 
 printf "\n☢️  Attempting to delete existing deployment %s\n\n" "${serviceName}"
-kubectl delete deployment public-api-service
+kubectl delete deployment "${serviceName}"
 
 printf "\n🏗️  Building docker image\n\n"
 docker build -t localhost:5001/"${serviceName}":"${version}" .

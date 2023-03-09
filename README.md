@@ -33,7 +33,9 @@ Following technologies and CLIs are used for the development. Follow the links t
 
 - [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/make-azd-compatible?pivots=azd-create)
 - [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/)
-- [Dapr for AKS](https://docs.dapr.io/getting-started/install-dapr-kubernetes/)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
+- [Helm](https://helm.sh/docs/intro/install/)
 - [Redis](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/)
 - [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
 - [Spring Boot](https://spring.io/projects/spring-boot)
@@ -48,7 +50,24 @@ Make an alias for `kubectl` so the next set of commands are easier to read:
 alias k='kubectl'
 ```
 
-### 0. Local Image Registry
+### 1. Local Environment Setup
+
+Running following script setups your local environment for development:
+
+```bash
+./start-local-env.sh
+```
+
+This script does the following:
+
+1. Creates a local Docker registry called `kind-registry` running locally on port 9999.
+1. Creates a Kind cluster called `azd-aks` using config file from [kind-cluster-config.yaml](/local/kind-cluster-config.yaml).
+1. Connects the registry to the cluster network if not already connected so deployments can access the local registry.
+1. Maps the local registry to the cluster
+1. Deploys [Redis](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/) to the cluster using [Helm](https://helm.sh/docs/intro/quickstart/) [chart](https://bitnami.com/stack/redis/helm) to use for different Dapr components (pub/sub, state store, etc).
+1. Deploys [Dapr](https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/) on your local cluster.
+1. Deploys [Pub/Sub Broker](https://docs.dapr.io/developing-applications/building-blocks/pubsub/pubsub-overview/) using Redis as the message broker using [redis.yaml](./local/components/redis.yaml) Dapr component.
+
 
 One of the challenges in using Kubernetes for local development is getting local Docker containers you create during development to your Kubernetes cluster. Configuring this correctly allows Kubernetes to access any Docker images you create locally when deploying your Pods and Services to the cluster you created using kind.
 
@@ -58,83 +77,7 @@ The following script creates a Docker registry called `kind-registry` running lo
 ./local/create-registry.sh
 ```
 
-### 1. Create Kind Cluster (Local k8s Cluster)
-
-Run following to create a Kind cluster called `azd-aks` using config file from [kind-cluster-config.yaml](/local/kind-cluster-config.yaml):
-
-```bash
-kind create cluster --name azd-aks --config ./local/kind-cluster-config.yaml
-```
-
-This is going to request KiND to spin up a kubernetes cluster comprised of a control plane and two worker nodes.
-It also allows for future setup of ingresses and exposes container ports to the host machine.
-
-```bash
-## Get all pods from all namespaces including system pods
-k get pods -A
-```
-
-This should output something like below or similar to [docker desktop screenshot](./docs//kind-cluster-running.png):
-
-```bash
-NAMESPACE            NAME                                            READY   STATUS    RESTARTS   AGE
-kube-system          coredns-565d847f94-l766m                        1/1     Running   0          13s
-kube-system          coredns-565d847f94-w679q                        1/1     Running   0          13s
-kube-system          etcd-azd-aks-control-plane                      1/1     Running   0          28s
-kube-system          kindnet-9p8wc                                   1/1     Running   0          13s
-kube-system          kindnet-n94pz                                   1/1     Running   0          10s
-kube-system          kindnet-sfsgr                                   1/1     Running   0          10s
-kube-system          kube-apiserver-azd-aks-control-plane            1/1     Running   0          29s
-kube-system          kube-controller-manager-azd-aks-control-plane   1/1     Running   0          26s
-kube-system          kube-proxy-nrbv6                                1/1     Running   0          13s
-kube-system          kube-proxy-vxh62                                1/1     Running   0          10s
-kube-system          kube-proxy-wss4d                                1/1     Running   0          10s
-kube-system          kube-scheduler-azd-aks-control-plane            1/1     Running   0          28s
-local-path-storage   local-path-provisioner-684f458cdd-t2fp6         1/1     Running   0          13s
-```
-
-The last step we have is to connect the kind cluster’s network with the local Docker registry’s network:
-
-```bash
-docker network connect "kind" "kind-registry"
- ```
-
-
-### 2. Install Dapr on Kind Cluster
-
-Once Dapr finishes initializing its core components are ready to be used on the cluster. Run the following command to install Dapr on the Kind cluster:
-
-```bash
-dapr init --kubernetes
-```
-
-This should output something like below:
-
-```bash
-⌛  Making the jump to hyperspace...
-ℹ️  Note: To install Dapr using Helm, see here: https://docs.dapr.io/getting-started/install-dapr-kubernetes/#install-with-helm-advanced
-
-ℹ️  Container images will be pulled from Docker Hub
-✅  Deploying the Dapr control plane to your cluster...
-✅  Success! Dapr has been installed to namespace dapr-system. To verify, run `dapr status -k' in your terminal. To get started, go here: https://aka.ms/dapr-getting-started
-```
-
-To verify the status of these components run:
-
-```bash
-dapr status -k
-```
-
-This should output something like below:
-
-```bash
-NAME                   NAMESPACE    HEALTHY  STATUS   REPLICAS  VERSION  AGE  CREATED              
-dapr-dashboard         dapr-system  True     Running  1         0.12.0   10m  2023-03-07 14:35.06  
-dapr-sentry            dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
-dapr-placement-server  dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.07  
-dapr-operator          dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
-dapr-sidecar-injector  dapr-system  True     Running  1         1.10.2   10m  2023-03-07 14:35.06  
-```
+### 2. Dapr Dashboard & Components
 
 You can validate that the setup finished successfully by navigating to <http://localhost:9000>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
 
@@ -142,74 +85,88 @@ You can validate that the setup finished successfully by navigating to <http://l
 dapr dashboard -k -p 9000
 ```
 
-### 3. Deploy Dapr Pub/Sub Broker (Redis)
-
-Dapr Pub/Sub Broker uses [Redis](https://redis.io/) as a pub/sub broker.
-A `redis.yaml` under `./local/components` folder to define Pub/Sub Broker was created in the repo.
-Run the following command to deploy Redis as Pub/Sub Broker on the Kind cluster:
-
-```bash
-k apply -f ./local/components/redis.yaml
-```
-
-To verify the installation of pub/sub broker run:
+To verify the installation of pub/sub broker and other components:
 
 ```bash
 dapr components -k
 ```
 
-This should output something similar to below. Alternatively, you can check the status of the component in the Dapr dashboard `http://localhost:9999/components`:
+### 3. Deploy Services to Cluster
+
+By convention, every service under `/src` folder has 2 files:
+
+1. [Dockerfile](/src/public-api-service/Dockerfile) - Dockerfile for building the service image.
+1. [local-deploy.sh](/src/public-api-service/local-deploy.sh) - Script file to build, publish and deployment the latest code to local cluster as Docker image.
+
+To deploy all services to the cluster, run the following command:
 
 ```bash
-NAMESPACE  NAME    TYPE          VERSION  SCOPES  CREATED              AGE  
-default    pubsub  pubsub.redis  v1               2023-03-07 15:02.34  3m  
+./deploy-services-local.sh
 ```
 
-### 4. Deploy Public API Service to Cluster
-
-We will deploy a public API service to the cluster. This service will be exposed as load balancer service type.
-
-#### 4.1. Build and Push Docker Image to Local Registry
-
-You can build public-api-service as a Docker container using the docker build command.
-The following line tags the build using the -t flag and specifies the local repository we created earlier.
-
-```bash
-cd ./src/public-api-service
-docker build -t localhost:5001/public-api-service:0.1 .
-```
-
-At this point, we have a Docker container built and tagged. Next we can push it to our local repository with the docker push command.
-
-```bash
-docker push localhost:5001/public-api-service:0.1
-```
-
-#### 4.2 Deploy Public API Service to Cluster
-
-At the root of the project:
-
-```bash
-k apply -f ./local/deployments/public-api-service.yaml
-```
-
-This will output something like below:
-
-```bash
-service/public-api created
-deployment.apps/public-api created
-```
-
-You can check the deployment status of the public-api service by running:
+You can check the deployment status of the services:
 
 ```bash
 k get pods -A
 ```
 
-#### 4.3. Expose Public API Service
+You should get an output similar to:
 
-Loadbalancer service type you will not able to get public ip because you're running it locally and instead you can access this service locally using the Kubectl proxy tool.
+```bash
+NAMESPACE            NAME                                            READY   STATUS    RESTARTS      AGE
+dapr-system          dapr-dashboard-575df59d4c-f29nk                 1/1     Running   0             22h
+dapr-system          dapr-operator-676b7df68d-pldlj                  1/1     Running   1 (22h ago)   22h
+dapr-system          dapr-placement-server-0                         1/1     Running   0             22h
+dapr-system          dapr-sentry-5f44fd7c9d-tl9cj                    1/1     Running   0             22h
+dapr-system          dapr-sidecar-injector-c66df4c49-78hhz           1/1     Running   0             22h
+default              fraud-service-845cf7bbd6-rs226                  2/2     Running   0             11m
+default              redis-master-0                                  1/1     Running   0             19h
+default              redis-replicas-0                                1/1     Running   0             19h
+default              redis-replicas-1                                1/1     Running   0             19h
+default              redis-replicas-2                                1/1     Running   0             19h
+kube-system          coredns-565d847f94-c86vx                        1/1     Running   0             22h
+kube-system          coredns-565d847f94-fnv99                        1/1     Running   0             22h
+kube-system          etcd-azd-aks-control-plane                      1/1     Running   0             22h
+kube-system          kindnet-4n27c                                   1/1     Running   0             22h
+kube-system          kindnet-tltlz                                   1/1     Running   0             22h
+kube-system          kindnet-wsrq2                                   1/1     Running   0             22h
+kube-system          kube-apiserver-azd-aks-control-plane            1/1     Running   0             22h
+kube-system          kube-controller-manager-azd-aks-control-plane   1/1     Running   0             22h
+kube-system          kube-proxy-pz56s                                1/1     Running   0             22h
+kube-system          kube-proxy-tpzzg                                1/1     Running   0             22h
+kube-system          kube-proxy-vxh4g                                1/1     Running   0             22h
+kube-system          kube-scheduler-azd-aks-control-plane            1/1     Running   0             22h
+local-path-storage   local-path-provisioner-684f458cdd-wbpps         1/1     Running   0             22h
+```
+
+### 4. Connecting to Public API Service
+
+[Public API](/src/public-api-service) is deployed as `Loadbalancer` service type. In local cluster setup, it will not able to get public IP to connect.
+Instead, you can access this service locally using the Kubectl proxy tool.
 
 ```bash
 k port-forward service/public-api-service 8080:80
+```
+
+While this command is running, you can access the service at <http://localhost:8080>.
+
+An example request to start a new transfer workflow is:
+
+```curl
+curl -X POST \
+  http://localhost:8080/transfers \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sender": "A",
+    "receiver": "B",
+    "amount": 100
+}'
+```
+
+You can query the status of a transfer:
+
+```curl
+curl -X GET \
+  http://localhost:8080/transfers/{transferId} \
+  -H 'Content-Type: application/json'
 ```
