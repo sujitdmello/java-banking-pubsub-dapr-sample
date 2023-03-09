@@ -12,6 +12,7 @@ public class TransferRequest {
     private String sender;
     private String receiver;
     private double amount;
+    private String transferId;
 
     public String toString() {
         return "Sender: " + sender + ", Receiver: " + receiver + ", Amount: " + amount;

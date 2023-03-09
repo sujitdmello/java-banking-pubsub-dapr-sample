@@ -1,19 +1,19 @@
 package com.azdaks.fraudservice.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
 
 @Getter
 @Setter
+@Builder
 @Jacksonized
-public class TransferRequest {
-    private String sender;
-    private String receiver;
-    private double amount;
+public class StateRequest {
     private String transferId;
+    private String status;
 
     public String toString() {
-        return "ID" + transferId + "Sender: " + sender + ", Receiver: " + receiver + ", Amount: " + amount;
+        return "TransferId: " + transferId + ", Status: " + status;
     }
 }

@@ -8,13 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.State;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.http.HttpClient;
-import java.time.Duration;
-import java.util.logging.Logger;
 
 @RestController
 public class TransfersController {
@@ -23,12 +21,7 @@ public class TransfersController {
     private static final String TOPIC_NAME = "transfer";
     private static final String STATE_STORE = "money-transfer-state";
 
-    private static final Logger logger = Logger.getLogger(TransfersController.class.getName());
-
-    private static final HttpClient httpClient = HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_2)
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
+    private static final Logger logger = LoggerFactory.getLogger(TransfersController.class.getName());
 
     private final DaprClient client = new DaprClientBuilder().build();
 
@@ -44,6 +37,7 @@ public class TransfersController {
         var message = "Transfer Request Started: " + transferRequest;
         var status = TransferStatus.ACCEPTED;
         var transferId = TransferRequest.generateId();
+        transferRequest.setTransferId(transferId);
 
         try {
             /**
@@ -52,7 +46,7 @@ public class TransfersController {
              * https://github.com/dapr/java-sdk/issues/815
              */
 
-            logger.info("Publishing event to Dapr Pub/Sub Broker: %s".formatted(PUBSUB_NAME));
+            logger.info("Publishing event to Dapr Pub/Sub Broker: %s, %s".formatted(PUBSUB_NAME, transferRequest.toString()));
             client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest).block();
 
             var moneyTransfer = MoneyTransfer.builder()
@@ -68,7 +62,7 @@ public class TransfersController {
 
 
         } catch (Exception e) {
-            logger.severe("Error publishing message: ");
+            logger.error("Error publishing message: ");
 
             status = TransferStatus.REJECTED;
             message = e.getMessage();
@@ -107,7 +101,7 @@ public class TransfersController {
             return ResponseEntity.badRequest().body(moneyTransferState.getError());
 
         } catch (Exception e) {
-            logger.severe("Error getting state: ");
+            logger.error("Error getting state: ");
 
             return ResponseEntity.badRequest().body(e.getMessage());
         }
