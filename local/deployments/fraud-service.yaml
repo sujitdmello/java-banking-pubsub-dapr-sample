@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-service
+  labels:
+    app: fraud-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fraud-service
+  template:
+    metadata:
+      labels:
+        app: fraud-service
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "money-transfer-app"
+        dapr.io/app-port: "8080"
+        dapr.io/enable-api-logging: "true"
+    spec:
+      containers:
+      - name: node
+        image: localhost:5001/fraud-service:1.5
+        env:
+        - name: APP_PORT
+          value: "8080"
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always

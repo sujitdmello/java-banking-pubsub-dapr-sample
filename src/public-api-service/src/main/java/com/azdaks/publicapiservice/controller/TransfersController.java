@@ -2,12 +2,14 @@ package com.azdaks.publicapiservice.controller;
 
 import com.azdaks.publicapiservice.model.TransferRequest;
 import com.azdaks.publicapiservice.model.TransferResponse;
+import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.CloudEvent;
 import io.dapr.client.domain.Metadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +19,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +43,8 @@ public class TransfersController {
 
     private static final String DAPR_HOST = System.getenv().getOrDefault("DAPR_HOST", "http://localhost");
     private static final String DAPR_HTTP_PORT = System.getenv().getOrDefault("DAPR_HTTP_PORT", "3500");
+
+    private final DaprClient client = new DaprClientBuilder().build();
 
     public TransfersController() {
         logger.info("TransfersController created");
@@ -62,7 +69,6 @@ public class TransfersController {
              * Instead, we go with HTTP client to publish events to Dapr Pub/Sub for Spring Boot 3+
              * https://github.com/dapr/java-sdk/issues/815
              */
-            var client = new DaprClientBuilder().build();
             client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest).block();
 
 //            CloudEvent cloudEvent = new CloudEvent();

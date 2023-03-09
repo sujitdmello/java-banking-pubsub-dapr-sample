@@ -2,16 +2,12 @@
 
 This is the public API for starting money transfers.
 
-## Build the app
+## Deploy to Local Cluster
+
+Assuming a local cluster is running, you can deploy the service to it using the following command:
 
 ```bash
-docker build -t azd-aks/public-api-service:latest .
-```
-
-## Run the app
-
-```bash
-dapr run --app-id money-tansfer --app-port 6001 --dapr-http-port 3601 --dapr-grpc-port 60001 ./gradlew bootRun
+./local-deploy.sh
 ```
 
 ## Create New Transfer

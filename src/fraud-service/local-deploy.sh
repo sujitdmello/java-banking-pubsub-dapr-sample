@@ -1,6 +1,6 @@
 #!/bin/sh
 
-serviceName="public-api-service"
+serviceName="fraud-service"
 version=$(date +%Y.%m.%d.%H.%M.%S)
 printf "\n🛖  Releasing version: %s\n\n" "${version}"
 
@@ -16,21 +16,6 @@ docker push localhost:5001/"${serviceName}":"${version}"
 printf "\n🚀  Deploying to cluster\n\n"
 cat <<EOF | kubectl apply -f -
 
-kind: Service
-apiVersion: v1
-metadata:
-  name: ${serviceName}
-  labels:
-    app: ${serviceName}
-spec:
-  selector:
-    app: ${serviceName}
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
-  type: LoadBalancer
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
