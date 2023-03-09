@@ -68,15 +68,6 @@ This script does the following:
 1. Deploys [Dapr](https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/) on your local cluster.
 1. Deploys [Pub/Sub Broker](https://docs.dapr.io/developing-applications/building-blocks/pubsub/pubsub-overview/) using Redis as the message broker using [redis.yaml](./local/components/redis.yaml) Dapr component.
 
-
-One of the challenges in using Kubernetes for local development is getting local Docker containers you create during development to your Kubernetes cluster. Configuring this correctly allows Kubernetes to access any Docker images you create locally when deploying your Pods and Services to the cluster you created using kind.
-
-The following script creates a Docker registry called `kind-registry` running locally on port 9999. This script first inspects the current environment to check if we already have a local registry running, and if we do not, then we start a new registry. The registry itself is simply an instance of the registry Docker image available on Docker Hub. We use the docker run command to start the registry.
-
-```bash
-./local/create-registry.sh
-```
-
 ### 2. Dapr Dashboard & Components
 
 You can validate that the setup finished successfully by navigating to <http://localhost:9000>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
@@ -169,4 +160,12 @@ You can query the status of a transfer:
 curl -X GET \
   http://localhost:8080/transfers/{transferId} \
   -H 'Content-Type: application/json'
+```
+
+### 5. Delete Local Cluster
+
+If you'd like to create a clean state and start over, you can run the following command to delete the local cluster and all the resources associated with it.
+
+```bash
+kind delete cluster --name azd-aks
 ```

@@ -1,15 +1,16 @@
 package com.azdaks.publicapiservice.controller;
 
+import com.azdaks.publicapiservice.model.MoneyTransfer;
 import com.azdaks.publicapiservice.model.TransferRequest;
 import com.azdaks.publicapiservice.model.TransferResponse;
+import com.azdaks.publicapiservice.model.TransferStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;
-import org.springframework.http.HttpStatus;
+import io.dapr.client.domain.State;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -20,6 +21,7 @@ public class TransfersController {
 
     private static final String PUBSUB_NAME = "money-transfer-pubsub";
     private static final String TOPIC_NAME = "transfer";
+    private static final String STATE_STORE = "money-transfer-state";
 
     private static final Logger logger = Logger.getLogger(TransfersController.class.getName());
 
@@ -28,26 +30,19 @@ public class TransfersController {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    private static final String DAPR_HOST = System.getenv().getOrDefault("DAPR_HOST", "http://localhost");
-    private static final String DAPR_HTTP_PORT = System.getenv().getOrDefault("DAPR_HTTP_PORT", "3500");
-
     private final DaprClient client = new DaprClientBuilder().build();
 
-    public TransfersController() {
-        logger.info("TransfersController created");
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Create Transfer Request Endpoint
     @PostMapping(path = "/transfers", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TransferResponse> createTransferRequest(@RequestBody TransferRequest transferRequest) {
 
-        var pubsubUri = DAPR_HOST + ":" + DAPR_HTTP_PORT + "/v1.0/publish/" + PUBSUB_NAME + "/" + TOPIC_NAME;
 
         logger.info("Transfer Request Received");
-        logger.info(String.format("Start publishing message to broker: %s", pubsubUri));
 
         var message = "Transfer Request Started: " + transferRequest;
-        var status = HttpStatus.ACCEPTED;
+        var status = TransferStatus.ACCEPTED;
         var transferId = TransferRequest.generateId();
 
         try {
@@ -56,46 +51,65 @@ public class TransfersController {
              * Instead, we go with HTTP client to publish events to Dapr Pub/Sub for Spring Boot 3+
              * https://github.com/dapr/java-sdk/issues/815
              */
+
+            logger.info("Publishing event to Dapr Pub/Sub Broker: %s".formatted(PUBSUB_NAME));
             client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest).block();
 
-//            CloudEvent cloudEvent = new CloudEvent();
-//            cloudEvent.setData(transferRequest);
-//            cloudEvent.setType("com.dapr.cloudevent.sent");
-//            cloudEvent.setId(transactionId);
-//            cloudEvent.setSource("money-transfer-app");
-//            cloudEvent.setSpecversion("1.0");
-//            cloudEvent.setDatacontenttype("application/cloudevents+json");
+            var moneyTransfer = MoneyTransfer.builder()
+                    .transferId(transferId)
+                    .status(status)
+                    .amount(transferRequest.getAmount())
+                    .sender(transferRequest.getSender())
+                    .receiver(transferRequest.getReceiver())
+                    .build();
 
-
-            // Publish an event/message using Dapr PubSub via HTTP Post
-//            HttpRequest request = HttpRequest.newBuilder()
-//                    .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(transferRequest)))
-//                    .uri(URI.create(pubsubUri))
-//                    .header("Content-Type", "application/json")
-//                    .build();
-//
-//            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-//
-//            logger.info(String.valueOf(response.statusCode()));
-//            logger.info(response.body());
+            logger.info("Publishing event to Dapr State: %s".formatted(STATE_STORE));
+            client.saveState(STATE_STORE, transferId, moneyTransfer).block();
 
 
         } catch (Exception e) {
             logger.severe("Error publishing message: ");
 
-            status = HttpStatus.BAD_REQUEST;
+            status = TransferStatus.REJECTED;
             message = e.getMessage();
         }
 
         var response = TransferResponse
                 .builder()
                 .message(message)
-                .status(status.toString())
+                .status(status)
                 .transferId(transferId)
                 .build();
 
         logger.info("Transfer Request Published");
 
-        return status == HttpStatus.ACCEPTED ? ResponseEntity.accepted().body(response) : ResponseEntity.badRequest().body(response);
+        return status.equals(TransferStatus.ACCEPTED)
+                ? ResponseEntity.accepted().body(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping(path = "/transfers/{transferId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getTransferRequest(@PathVariable String transferId) {
+
+        try {
+            logger.info("Getting state from Dapr State: %s".formatted(STATE_STORE));
+            State<MoneyTransfer> moneyTransferState = client.getState(STATE_STORE, transferId, MoneyTransfer.class).block();
+            var moneyTransfer = moneyTransferState.getValue();
+
+            logger.info("State: " + moneyTransfer);
+            logger.info("Error: " + moneyTransferState.getError());
+            logger.info("Key: " + moneyTransferState.getKey());
+
+            if (moneyTransferState.getError() == null) {
+                return ResponseEntity.ok(objectMapper.writeValueAsString(moneyTransfer));
+            }
+
+            return ResponseEntity.badRequest().body(moneyTransferState.getError());
+
+        } catch (Exception e) {
+            logger.severe("Error getting state: ");
+
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
