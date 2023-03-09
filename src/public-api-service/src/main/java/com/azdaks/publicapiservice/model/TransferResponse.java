@@ -10,5 +10,7 @@ import lombok.Setter;
 public class TransferResponse {
     private String message;
     private String status;
-    private String transactionId;
+    private String transferId;
+
+
 }

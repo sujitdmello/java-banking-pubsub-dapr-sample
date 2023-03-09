@@ -4,29 +4,16 @@ import com.azdaks.publicapiservice.model.TransferRequest;
 import com.azdaks.publicapiservice.model.TransferResponse;
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;
-import io.dapr.client.domain.CloudEvent;
-import io.dapr.client.domain.Metadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Logger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static java.util.Collections.singletonMap;
 
 @RestController
 public class TransfersController {
@@ -57,11 +44,11 @@ public class TransfersController {
         var pubsubUri = DAPR_HOST + ":" + DAPR_HTTP_PORT + "/v1.0/publish/" + PUBSUB_NAME + "/" + TOPIC_NAME;
 
         logger.info("Transfer Request Received");
-        logger.info(String.format("Start publishing message to Dapr Pub/Sub: %s", pubsubUri));
+        logger.info(String.format("Start publishing message to broker: %s", pubsubUri));
 
-        var message = "Transfer Request Received: " + transferRequest;
+        var message = "Transfer Request Started: " + transferRequest;
         var status = HttpStatus.ACCEPTED;
-        var transactionId = "123456789";
+        var transferId = TransferRequest.generateId();
 
         try {
             /**
@@ -80,7 +67,7 @@ public class TransfersController {
 //            cloudEvent.setDatacontenttype("application/cloudevents+json");
 
 
-                    // Publish an event/message using Dapr PubSub via HTTP Post
+            // Publish an event/message using Dapr PubSub via HTTP Post
 //            HttpRequest request = HttpRequest.newBuilder()
 //                    .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(transferRequest)))
 //                    .uri(URI.create(pubsubUri))
@@ -104,11 +91,11 @@ public class TransfersController {
                 .builder()
                 .message(message)
                 .status(status.toString())
-                .transactionId(transactionId)
+                .transferId(transferId)
                 .build();
 
         logger.info("Transfer Request Published");
 
-        return status == HttpStatus.ACCEPTED ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+        return status == HttpStatus.ACCEPTED ? ResponseEntity.accepted().body(response) : ResponseEntity.badRequest().body(response);
     }
 }
