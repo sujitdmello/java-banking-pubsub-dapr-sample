@@ -98,30 +98,34 @@ k get pods -A
 You should get an output similar to:
 
 ```bash
-NAMESPACE            NAME                                            READY   STATUS    RESTARTS      AGE
-dapr-system          dapr-dashboard-575df59d4c-f29nk                 1/1     Running   0             22h
-dapr-system          dapr-operator-676b7df68d-pldlj                  1/1     Running   1 (22h ago)   22h
-dapr-system          dapr-placement-server-0                         1/1     Running   0             22h
-dapr-system          dapr-sentry-5f44fd7c9d-tl9cj                    1/1     Running   0             22h
-dapr-system          dapr-sidecar-injector-c66df4c49-78hhz           1/1     Running   0             22h
-default              fraud-service-845cf7bbd6-rs226                  2/2     Running   0             11m
-default              redis-master-0                                  1/1     Running   0             19h
-default              redis-replicas-0                                1/1     Running   0             19h
-default              redis-replicas-1                                1/1     Running   0             19h
-default              redis-replicas-2                                1/1     Running   0             19h
-kube-system          coredns-565d847f94-c86vx                        1/1     Running   0             22h
-kube-system          coredns-565d847f94-fnv99                        1/1     Running   0             22h
-kube-system          etcd-azd-aks-control-plane                      1/1     Running   0             22h
-kube-system          kindnet-4n27c                                   1/1     Running   0             22h
-kube-system          kindnet-tltlz                                   1/1     Running   0             22h
-kube-system          kindnet-wsrq2                                   1/1     Running   0             22h
-kube-system          kube-apiserver-azd-aks-control-plane            1/1     Running   0             22h
-kube-system          kube-controller-manager-azd-aks-control-plane   1/1     Running   0             22h
-kube-system          kube-proxy-pz56s                                1/1     Running   0             22h
-kube-system          kube-proxy-tpzzg                                1/1     Running   0             22h
-kube-system          kube-proxy-vxh4g                                1/1     Running   0             22h
-kube-system          kube-scheduler-azd-aks-control-plane            1/1     Running   0             22h
-local-path-storage   local-path-provisioner-684f458cdd-wbpps         1/1     Running   0             22h
+NAMESPACE            NAME                                            READY   STATUS    RESTARTS       AGE
+dapr-system          dapr-dashboard-575df59d4c-mp262                 1/1     Running   0              172m
+dapr-system          dapr-operator-676b7df68d-xwzjw                  1/1     Running   0              172m
+dapr-system          dapr-placement-server-0                         1/1     Running   1 (171m ago)   172m
+dapr-system          dapr-sentry-5f44fd7c9d-gjjcl                    1/1     Running   0              172m
+dapr-system          dapr-sidecar-injector-c66df4c49-h645k           1/1     Running   0              172m
+default              account-service-655448db67-vdc6n                2/2     Running   0              14m
+default              custody-service-5b8656d84c-lgb8j                2/2     Running   0              13m
+default              fraud-service-7dfcd56d86-hs7s6                  2/2     Running   0              15m
+default              notification-service-7dfbb47b4f-sthln           2/2     Running   0              12m
+default              public-api-service-5df9f84648-gb9t2             2/2     Running   0              15m
+default              redis-master-0                                  1/1     Running   0              172m
+default              redis-replicas-0                                1/1     Running   0              172m
+default              redis-replicas-1                                1/1     Running   0              171m
+default              redis-replicas-2                                1/1     Running   0              170m
+kube-system          coredns-565d847f94-k5nc4                        1/1     Running   0              172m
+kube-system          coredns-565d847f94-qx2tn                        1/1     Running   0              172m
+kube-system          etcd-azd-aks-control-plane                      1/1     Running   0              172m
+kube-system          kindnet-7rhdn                                   1/1     Running   0              172m
+kube-system          kindnet-bbk74                                   1/1     Running   0              172m
+kube-system          kindnet-nfgrd                                   1/1     Running   0              172m
+kube-system          kube-apiserver-azd-aks-control-plane            1/1     Running   0              172m
+kube-system          kube-controller-manager-azd-aks-control-plane   1/1     Running   0              172m
+kube-system          kube-proxy-6s47w                                1/1     Running   0              172m
+kube-system          kube-proxy-7mnzh                                1/1     Running   0              172m
+kube-system          kube-proxy-kj8pn                                1/1     Running   0              172m
+kube-system          kube-scheduler-azd-aks-control-plane            1/1     Running   0              172m
+local-path-storage   local-path-provisioner-684f458cdd-wtmqh         1/1     Running   0              172m
 ```
 
 ### 4. Connecting to Public API Service
