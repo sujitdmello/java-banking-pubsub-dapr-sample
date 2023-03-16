@@ -1,4 +1,4 @@
-# A Banking Workflow AKS Cluster using DAPR
+# A Banking Workflow AKS Cluster using DAPR [WIP]
 
 This sample creates an AKS Cluster and uses DAPR for service mesh. The project is built using [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/make-azd-compatible?pivots=azd-create) conventions.
 
@@ -167,3 +167,14 @@ If you'd like to create a clean state and start over, you can run the following 
 ```bash
 kind delete cluster --name azd-aks
 ```
+
+## Implementation Status
+
+- [X] Public API endpoint receives new money transfer request. [TRANSFER(Sender: A, Amount: 100, Receiver:B)]
+- [X] Request is published to Redis (pub/sub)
+- [X] Deposit workflow starts
+  - [X] Fraud service checks the legitimacy of the operation and triggers [VALIDATED(Sender: A, Amount: 100, Receiver:B)]
+  - [ ] Account service checks if `Sender` has enough funds and triggers [APPROVED(Sender: A, Amount: 100, Receiver: B)]
+  - [ ] Custody service moves `Amount` from `Sender` to `Receiver` and triggers [COMPLETED(Sender: A, Amount: 100, Receiver: B)]
+  - [ ] Notification services notifies both `Sender` and `Receiver`.
+- [ ] In the meantime, Public API endpoint checks if there is a confirmation of the money transfer request in the notifications.
