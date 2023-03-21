@@ -70,9 +70,6 @@ public class TransferEventController {
 
                 logger.info("Account limit updated: " + transferRequest.getSender() + ", new amount: " + newAmount);
 
-                logger.info("Publishing transfer request: " + transferRequest);
-                client.publishEvent(PUBSUB_NAME, PUBLISHED_TOPIC_NAME, transferRequest).block();
-
                 var createAccountRequest = CreateAccountRequest.builder()
                         .amount(newAmount)
                         .owner(transferRequest.getSender())
@@ -83,6 +80,9 @@ public class TransferEventController {
 
                 logger.info("Publishing state request: " + stateRequest);
                 publishStateRequest(stateRequest, "APPROVED");
+
+                logger.info("Publishing transfer request: " + transferRequest);
+                client.publishEvent(PUBSUB_NAME, PUBLISHED_TOPIC_NAME, transferRequest).block();
                 
 
                 return ResponseEntity.ok("SUCCESS");
