@@ -32,6 +32,7 @@ public class TransferEventController {
     private static final String STATE_TOPIC_NAME = "state";
     private static final String PUBLISHED_TOPIC_NAME = "approved";
     private static final String STATE_STORE = "money-transfer-state";
+    private static final String ACCOUNT_UPDATE_TOPIC = "account-update";
 
     private final DaprClient client = new DaprClientBuilder().build();
 
@@ -71,6 +72,17 @@ public class TransferEventController {
 
                 logger.info("Publishing transfer request: " + transferRequest);
                 client.publishEvent(PUBSUB_NAME, PUBLISHED_TOPIC_NAME, transferRequest).block();
+
+                var createAccountRequest = CreateAccountRequest.builder()
+                        .amount(newAmount)
+                        .owner(transferRequest.getSender())
+                        .build();
+
+                logger.info("Publishing Account Limit Updated: " + createAccountRequest);
+                client.publishEvent(PUBSUB_NAME, ACCOUNT_UPDATE_TOPIC, createAccountRequest).block();
+
+                logger.info("Publishing state request: " + stateRequest);
+                publishStateRequest(stateRequest, "APPROVED");
                 
 
                 return ResponseEntity.ok("SUCCESS");

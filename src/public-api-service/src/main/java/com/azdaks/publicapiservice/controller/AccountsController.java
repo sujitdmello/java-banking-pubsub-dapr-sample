@@ -9,8 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.azdaks.publicapiservice.model.AccountResponse;
 import com.azdaks.publicapiservice.model.CreateAccountRequest;
 import com.azdaks.publicapiservice.model.TransferResponse;
+
+import io.dapr.Topic;
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;
+import io.dapr.client.domain.CloudEvent;
+import reactor.core.publisher.Mono;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +26,7 @@ public class AccountsController {
     private static final String STATE_STORE = "money-transfer-state";
     private static final String PUBSUB_NAME = "money-transfer-pubsub";
     private static final String TOPIC_NAME = "deposit";
+    private static final String ACCOUNT_UPDATE_TOPIC = "account-update";
 
     private static final Logger logger = LoggerFactory.getLogger(TransfersController.class.getName());
 
@@ -56,5 +62,27 @@ public class AccountsController {
                 .owner(owner)
                 .amount(accountAmount.getValue())
                 .build());
+    }
+
+    @Topic(name = ACCOUNT_UPDATE_TOPIC, pubsubName = PUBSUB_NAME)
+    @PostMapping(path = "/account-updates", consumes = MediaType.ALL_VALUE)
+    public Mono<ResponseEntity> handleAccountRequest(@RequestBody(required = false) CloudEvent<CreateAccountRequest> cloudEvent) {
+        return Mono.fromSupplier(() -> {
+            try {
+                logger.info("Account update received: " + cloudEvent.getData().toString());
+
+                var request = cloudEvent.getData();
+
+                logger.info(String.format("Saving to State: Owner: %s, Amount: %,.2f", request.getOwner(), request.getAmount()));
+                client.saveState(STATE_STORE, request.getOwner(), request.getAmount()).block();
+
+                return ResponseEntity.ok("SUCCESS");
+
+            } catch (Exception e) {
+
+                logger.error("Error while processing account update request: " + e.getMessage());
+                return ResponseEntity.ok("SUCCESS");
+            }
+        });
     }
 }
