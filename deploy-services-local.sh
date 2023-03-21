@@ -21,12 +21,6 @@ sh ./local-deploy.sh
 
 printf '\n ================================== \n\n'
 
-printf '\n🎖️  Deploying Custody Service\n\n'
-cd ../../src/custody-service
-sh ./local-deploy.sh
-
-printf '\n ================================== \n\n'
-
 printf '\n🎖️  Notification Service\n\n'
 cd ../../src/notification-service
 sh ./local-deploy.sh

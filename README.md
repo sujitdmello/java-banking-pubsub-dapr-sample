@@ -62,6 +62,10 @@ This script does the following:
 1. Deploys [Dapr](https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/) on your local cluster.
 1. Deploys [Pub/Sub Broker](https://docs.dapr.io/developing-applications/building-blocks/pubsub/pubsub-overview/) using Redis as the message broker using [redis.yaml](./local/components/redis.yaml) Dapr component.
 
+Your local cluster will be laid out as follows:
+
+![Local](/docs/local.drawio.png)
+
 ### 2. Dapr Dashboard & Components
 
 You can validate that the setup finished successfully by navigating to <http://localhost:9000>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your browser.
