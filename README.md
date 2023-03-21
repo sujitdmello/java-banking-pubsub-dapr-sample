@@ -178,3 +178,34 @@ kind delete cluster --name azd-aks
   - [ ] Custody service moves `Amount` from `Sender` to `Receiver` and triggers [COMPLETED(Sender: A, Amount: 100, Receiver: B)]
   - [ ] Notification services notifies both `Sender` and `Receiver`.
 - [ ] In the meantime, Public API endpoint checks if there is a confirmation of the money transfer request in the notifications.
+
+
+## How To
+
+Following are practical operator guides for common tasks.
+
+### How to Operate Redis
+
+To connect to Redis, you can use the following command:
+
+```bash
+kubectl exec -it redis-master-0 -- redis-cli
+```
+
+To get Redis password:
+
+```bash
+kubectl get secret --namespace default redis -o jsonpath="{.data.redis-password}" | base64 --decode
+```
+
+To AUTH with Redis instance for further operations
+
+```bash
+AUTH <password>
+```
+
+Get all keys in the state store:
+
+```bash
+keys *
+```
