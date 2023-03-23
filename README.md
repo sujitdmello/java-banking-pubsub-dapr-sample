@@ -94,7 +94,7 @@ To deploy all services to the cluster, run the following command:
 You can check the deployment status of the services:
 
 ```bash
-k get pods -A
+kubectl get pods -A
 ```
 
 You should get an output similar to:
@@ -136,7 +136,7 @@ local-path-storage   local-path-provisioner-684f458cdd-wtmqh         1/1     Run
 Instead, you can access this service locally using the Kubectl proxy tool.
 
 ```bash
-k port-forward service/public-api-service 8080:80
+kubectl port-forward service/public-api-service 8080:80
 ```
 
 While this command is running, you can access the service at <http://localhost:8080>.
