@@ -21,9 +21,9 @@ helm install redis bitnami/redis
 
 
 printf '\n📀 Init Dapr\n\n'
-
-dapr stop
-dapr init --kubernetes --wait --timeout 600
+# TODO: https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/
+dapr uninstall --kubernetes --namespace dapr-system
+dapr init --kubernetes --namespace dapr-system --wait --timeout 600
 
 printf '\n📀 Deploy pub-sub broker component backed by Redis\n\n'
 kubectl apply -f ./local/components/pubsub.yaml --wait=true

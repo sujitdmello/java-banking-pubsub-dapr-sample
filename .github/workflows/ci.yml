@@ -1,0 +1,28 @@
+name: "K8S Deploy Demo"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  banking-app-sample:
+    name: K8s Deployment Demo
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build using the DevContainer
+        uses: devcontainers/ci@v0.2
+        with:
+          cacheFrom: ghcr.io/ross-p-smith/azd-aks
+          runCmd: |
+            make all
+          env: |
+            GITHUB_WORKSPACE
