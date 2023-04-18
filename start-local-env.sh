@@ -28,7 +28,7 @@ printf '\n📀 Deploy Redis\n\n'
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install redis bitnami/redis
 
-printf '\n📀 Init Darp\n\n'
+printf '\n📀 Init Dapr\n\n'
 dapr init --kubernetes --wait --timeout 600
 
 printf '\n📀 Deploy pub-sub broker component backed by Redis\n\n'
