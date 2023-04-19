@@ -1,12 +1,17 @@
 #!/bin/sh
 set -o errexit
 
-. ./.env
-# If no access to Azure then display error message telling azure to login
-if ! az account show 1>/dev/null 2>&1; then
-  az login --tenant $ARM_TENANT_ID
-fi
+# This script assumes that you are running it from the make file as it will 
+# source environment variables from the .env file.
 
+# Handle Azure login, whether it's a user or SPN normally depends on CI
+if ! az account show 1>/dev/null 2>&1; then
+  if [ -z "$ARM_CLIENT_ID" ]; then
+    az login --tenant $ARM_TENANT_ID
+  else
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+  fi
+fi
 az account set --subscription $ARM_SUBSCRIPTION_ID
 
 printf "\n⚓  Getting K8s Context...\n\n"
@@ -31,9 +36,6 @@ kubectl apply -f ./local/components/pubsub.yaml --wait=true
 printf '\n📀 Deploy state store component backed Redis\n\n'
 kubectl apply -f ./local/components/state.yaml --wait=true
 
-
-printf "\n🎉 Azure environment setup completed!\n\n"
-
 printf '\n🎖️  Deploying Public API Service\n\n'
 cd ./src/public-api-service
 sh ./azure-deploy.sh ${ACR_NAME}
@@ -55,3 +57,5 @@ printf '\n ================================== \n\n'
 printf '\n🎖️  Notification Service\n\n'
 cd ../../src/notification-service
 sh ./azure-deploy.sh ${ACR_NAME}
+
+printf "\n🎉 Azure environment setup completed!\n\n"
