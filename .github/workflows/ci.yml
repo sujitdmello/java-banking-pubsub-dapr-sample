@@ -1,14 +1,13 @@
 name: "K8S Deploy Demo"
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  push:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  k8s-sample:
+  build:
     name: K8s Deployment Demo
     runs-on: ubuntu-20.04
     environment: dev
@@ -20,19 +19,21 @@ jobs:
           persist-credentials: false
 
       - name: Login to GH-CR to push the updated devcontainer image
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # This will use a cached image if avaialble. It will push the image if the build is
+      # successful and on the main branch.
       - name: Build using the DevContainer
         uses: devcontainers/ci@v0.3
         with:
           imageName: ghcr.io/ross-p-smith/azd-aks
           cacheFrom: ghcr.io/ross-p-smith/azd-aks
-          push: always
-          runCmd: make deploy
+          refFilterForPush: refs/heads/main
+          runCmd: make all
           env: |
             GITHUB_WORKSPACE
             ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}
