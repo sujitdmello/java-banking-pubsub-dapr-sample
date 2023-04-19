@@ -38,8 +38,8 @@ jobs:
             GITHUB_WORKSPACE
             ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
-            ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
-            ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
             RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
             CLUSTER_NAME: ${{ vars.CLUSTER_NAME }}
             ACR_NAME: ${{ vars.ACR_NAME }}
