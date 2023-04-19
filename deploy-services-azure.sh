@@ -9,7 +9,7 @@ if ! az account show 1>/dev/null 2>&1; then
   if [ -z "$ARM_CLIENT_ID" ]; then
     az login --tenant $ARM_TENANT_ID
   else
-    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    az login --service-principal -u $ARM_CLIENT_ID -p=$ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
   fi
 fi
 az account set --subscription $ARM_SUBSCRIPTION_ID
