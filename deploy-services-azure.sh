@@ -4,6 +4,11 @@ set -o errexit
 # This script assumes that you are running it from the make file as it will 
 # source environment variables from the .env file.
 
+echo $ARM_TENANT_ID
+echo $ARM_SUBSCRIPTION_ID
+echo $ARM_CLIENT_ID
+exit 0
+
 # Handle Azure login, whether it's a user or SPN normally depends on CI
 if ! az account show 1>/dev/null 2>&1; then
   if [ -z "$ARM_CLIENT_ID" ]; then
