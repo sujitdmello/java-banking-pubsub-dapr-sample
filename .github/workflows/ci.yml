@@ -10,7 +10,7 @@ jobs:
   build:
     name: K8s Deployment Demo
     runs-on: ubuntu-20.04
-    environment: dev
+    environment: b3
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
