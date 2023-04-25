@@ -28,13 +28,13 @@ printf "\n🤖  Starting Azure deployments...\n\n"
 
 printf '\n📀 Deploy Redis\n\n'
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm uninstall redis
+#helm uninstall redis
 helm install redis bitnami/redis
 
 
 printf '\n📀 Init Dapr\n\n'
 # TODO: https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/
-dapr uninstall --kubernetes --namespace dapr-system
+#dapr uninstall --kubernetes --namespace dapr-system
 dapr init --kubernetes --namespace dapr-system --wait --timeout 600
 
 printf '\n📀 Deploy pub-sub broker component backed by Redis\n\n'
