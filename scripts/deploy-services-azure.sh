@@ -28,13 +28,13 @@ printf "\n🤖  Starting Azure deployments...\n\n"
 
 printf '\n📀 Deploy Redis\n\n'
 helm repo add bitnami https://charts.bitnami.com/bitnami
-#helm uninstall redis
+helm uninstall redis
 helm install redis bitnami/redis
 
 
 printf '\n📀 Init Dapr\n\n'
 # TODO: https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/
-#dapr uninstall --kubernetes --namespace dapr-system
+dapr uninstall --kubernetes --namespace dapr-system
 dapr init --kubernetes --namespace dapr-system --wait --timeout 600
 
 printf '\n📀 Deploy pub-sub broker component backed by Redis\n\n'
@@ -50,19 +50,19 @@ sh ./service-deploy.sh --hostname ${ACR_NAME} --azure
 printf '\n ================================== \n\n'
 
 printf '\n🎖️  Deploying Fraud Service\n\n'
-cd ../../src/fraud-service
+cd ../fraud-service
 sh ./service-deploy.sh --hostname ${ACR_NAME} --azure
 
 printf '\n ================================== \n\n'
 
 printf '\n🎖️  Deploying Account Service\n\n'
-cd ../../src/account-service
+cd ../account-service
 sh ./service-deploy.sh --hostname ${ACR_NAME} --azure
 
 printf '\n ================================== \n\n'
 
 printf '\n🎖️  Notification Service\n\n'
-cd ../../src/notification-service
+cd ../notification-service
 sh ./service-deploy.sh --hostname ${ACR_NAME} --azure
 
 printf "\n🎉 Azure environment setup completed!\n\n"

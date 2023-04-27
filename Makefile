@@ -21,14 +21,30 @@ help: ## 💬 This help message :)
 
 all: deploy test ## 🏃‍♀️ Run all the things
 
-test: ## 🧪 Run tests, used for local development
+test: ## 🧪 Run tests, used for azure development
 	@echo -e "\e[34m$@\e[0m" || true
-	@./test.sh
+	@./scripts/test.sh --azure
 
 deploy: ## 🚀 Deploy application resources
 	@echo -e "\e[34m$@\e[0m" || true
-	@./deploy-services-azure.sh
+	@./scripts/deploy-services-azure.sh
 
 clean: ## 🧹 Clean up local files
 	@echo -e "\e[34m$@\e[0m" || true
-	@echo "Delete docker images here"
+	@kind delete cluster --name azd-aks
+
+start-local: ## 🧹 Setup local Kind Cluster
+	@echo -e "\e[34m$@\e[0m" || true
+	@./scripts/start-local-env.sh
+
+port-forward-local: ## ⏩ Forward the local port
+	@echo -e "\e[34m$@\e[0m" || true
+	@kubectl port-forward service/public-api-service 8080:80
+
+deploy-local: ## 🚀 Deploy application resources
+	@echo -e "\e[34m$@\e[0m" || true
+	@./scripts/deploy-services-local.sh
+
+test-local: ## 🧪 Run tests, used for local development
+	@echo -e "\e[34m$@\e[0m" || true
+	@./scripts/test.sh
