@@ -33,7 +33,7 @@ jobs:
           imageName: ghcr.io/ross-p-smith/azd-aks
           cacheFrom: ghcr.io/ross-p-smith/azd-aks
           refFilterForPush: refs/heads/main
-          runCmd: make all
+          runCmd: make all-azure
           env: |
             GITHUB_WORKSPACE
             ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}
