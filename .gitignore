@@ -1,2 +1,3 @@
 .azure
 src/.DS_Store
+.env

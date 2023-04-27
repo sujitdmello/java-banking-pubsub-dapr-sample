@@ -10,17 +10,17 @@ sh ./local-deploy.sh
 printf '\n ================================== \n\n'
 
 printf '\n🎖️  Deploying Fraud Service\n\n'
-cd ../../src/fraud-service
+cd ../fraud-service
 sh ./local-deploy.sh
 
 printf '\n ================================== \n\n'
 
 printf '\n🎖️  Deploying Account Service\n\n'
-cd ../../src/account-service
+cd ../account-service
 sh ./local-deploy.sh
 
 printf '\n ================================== \n\n'
 
 printf '\n🎖️  Notification Service\n\n'
-cd ../../src/notification-service
+cd ../notification-service
 sh ./local-deploy.sh
