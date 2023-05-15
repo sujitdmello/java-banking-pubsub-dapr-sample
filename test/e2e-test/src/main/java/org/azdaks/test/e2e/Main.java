@@ -10,7 +10,12 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        var apiClient = new ApiClient(new ApiClientSettings(API_URL, TIMEOUT_SECONDS));
+        var apiSettings = ApiClientSettings.builder()
+                .apiUrl(API_URL)
+                .timeoutSeconds(TIMEOUT_SECONDS)
+                .build();
+        
+        var apiClient = new ApiClient(apiSettings);
 
         apiClient.CheckApplicationIsRunning();
         apiClient.createAccount();
