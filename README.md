@@ -52,15 +52,15 @@ The following commands are available:
 
 ```bash
 help                 💬 This help message :)
-all                  🏃‍♀️ Run all the things
 all-azure            🏃‍♀️ Run all the things in Azure
 start-local          🧹 Setup local Kind Cluster
 deploy-local         🚀 Deploy application resources locally
+run-local            💿 Run app locally
 port-forward-local   ⏩ Forward the local port
 test                 🧪 Run tests, used for local development
 clean                🧹 Clean up local files
 dapr-dashboard       🔬 Open the Dapr Dashboard
-dapr-components      🏗️ List the Dapr Components
+dapr-components      🏗️  List the Dapr Components
 deploy-azure         🚀 Deploy application resources in Azure
 test-azure           🧪 Run tests in Azure
 ```
