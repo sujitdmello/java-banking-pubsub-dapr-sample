@@ -35,7 +35,7 @@ public class ApiClient {
         _amount = 1000.0f;
     }
 
-    public void CheckApplicationIsRunning() throws Exception {
+    public void checkApplicationIsRunning() throws Exception {
         Printer.section("0. Application Running");
 
         Printer.message("👀 Test Application is Running");

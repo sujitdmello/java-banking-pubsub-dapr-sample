@@ -14,10 +14,10 @@ public class Main {
                 .apiUrl(API_URL)
                 .timeoutSeconds(TIMEOUT_SECONDS)
                 .build();
-        
+
         var apiClient = new ApiClient(apiSettings);
 
-        apiClient.CheckApplicationIsRunning();
+        apiClient.checkApplicationIsRunning();
         apiClient.createAccount();
         apiClient.createMoneyTransfer();
         apiClient.createMoneyTransfer();
