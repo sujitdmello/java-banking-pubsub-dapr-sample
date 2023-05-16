@@ -5,7 +5,7 @@ import org.azdaks.test.e2e.endpoint.CreateAccountEndpoint;
 import org.azdaks.test.e2e.endpoint.Executor;
 import org.azdaks.test.e2e.endpoint.HomeEndpoint;
 import org.azdaks.test.e2e.util.Assert;
-import org.azdaks.test.e2e.util.Printer;
+import org.azdaks.test.e2e.util.Print;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -30,9 +30,8 @@ public class ApiClient {
     }
 
     public void checkApplicationIsRunning() throws Exception {
-        Printer.section("0. Application Running");
-
-        Printer.message("👀 Test Application is Running");
+        Print.section("0. Application Running");
+        Print.message("👀 Test Application is Running");
 
         var result = new HomeEndpoint().execute(_executor);
 
@@ -41,9 +40,8 @@ public class ApiClient {
     }
 
     public void createAccount() throws Exception {
-        Printer.section("1. Test Create Account");
-
-        Printer.message("👀 Test Account Creation");
+        Print.section("1. Test Create Account");
+        Print.message("👀 Test Account Creation");
 
         var result = new CreateAccountEndpoint().execute(_executor);
 
@@ -53,10 +51,10 @@ public class ApiClient {
     }
 
     public void createMoneyTransfer() {
-        Printer.section("2. Test Create Money Transfer Completed");
+        Print.section("2. Test Create Money Transfer");
     }
 
     public void checkMoneyTransfer() {
-        Printer.section("3. Test Money Transfer");
+        Print.section("3. Test Money Transfer Completed");
     }
 }

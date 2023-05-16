@@ -2,7 +2,7 @@ package org.azdaks.test.e2e.endpoint;
 
 import org.azdaks.test.e2e.contract.response.ApiResponse;
 import org.azdaks.test.e2e.contract.response.HomeResponse;
-import org.azdaks.test.e2e.util.Printer;
+import org.azdaks.test.e2e.util.Print;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,7 +21,7 @@ public class HomeEndpoint implements Endpoint<HomeResponse> {
 
 
         var response = executor.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        Printer.response(response.body());
+        Print.response(response.body());
 
         var body = executor.getObjectMapper().readValue(response.body(), HomeResponse.class);
 

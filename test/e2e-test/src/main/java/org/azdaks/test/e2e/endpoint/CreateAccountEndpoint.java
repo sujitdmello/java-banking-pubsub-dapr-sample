@@ -3,7 +3,7 @@ package org.azdaks.test.e2e.endpoint;
 import org.azdaks.test.e2e.contract.request.CreateAccountRequest;
 import org.azdaks.test.e2e.contract.response.ApiResponse;
 import org.azdaks.test.e2e.contract.response.CreateAccountResponse;
-import org.azdaks.test.e2e.util.Printer;
+import org.azdaks.test.e2e.util.Print;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,7 +20,7 @@ public class CreateAccountEndpoint implements Endpoint<CreateAccountResponse> {
                 .build();
 
         var payload = executor.getObjectMapper().writeValueAsString(createAccountRequest);
-        Printer.request(payload);
+        Print.request(payload);
 
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(executor.getSettings().getApiUrl() + "/accounts"))
@@ -29,7 +29,7 @@ public class CreateAccountEndpoint implements Endpoint<CreateAccountResponse> {
                 .build();
 
         var response = executor.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        Printer.response(response.body());
+        Print.response(response.body());
 
         var createAccountResponse = executor.getObjectMapper().readValue(response.body(), CreateAccountResponse.class);
 
