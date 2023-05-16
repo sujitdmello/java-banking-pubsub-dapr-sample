@@ -18,11 +18,20 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+
+      - name: Install Dapr
+        run: |
+          wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+          sudo mv /home/runner/.dapr/bin/dapr /usr/local/bin
+
       - name: Setup Local
         run: make start-local
 
       - name: Deploy Local
         run: make deploy-local
+
+      - name: Forward Port Local
+        run: make forward-local
 
       - name: Test
         run: make test-local
