@@ -32,6 +32,11 @@ deploy-local: ## 🚀 Deploy application resources locally
 	@echo -e "\e[34mYOU WILL NEED TO START A NEW TERMINAL AND RUN  make test\e[0m" || true
 
 
+test-local: ## 🧪 Run tests locally
+	@echo -e "\e[34m$@\e[0m" || true
+	@cd test/e2e-test && ./gradlew run
+
+
 run-local: clean start-local deploy-local ## 💿 Run app locally
 
 port-forward-local: ## ⏩ Forward the local port

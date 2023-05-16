@@ -18,12 +18,21 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Login to GH-CR to push the updated devcontainer image
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Local
+        run: make start-local
+
+      - name: Deploy Local
+        run: make deploy-local
+
+      - name: Test
+        run: make test-local
+
+      # - name: Login to GH-CR to push the updated devcontainer image
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
 
       # This will use a cached image if avaialble. It will push the image if the build is
       # successful and on the main branch.
