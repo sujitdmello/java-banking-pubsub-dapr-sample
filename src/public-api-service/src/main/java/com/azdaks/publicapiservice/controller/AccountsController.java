@@ -1,5 +1,6 @@
 package com.azdaks.publicapiservice.controller;
 
+import com.azdaks.publicapiservice.model.CreateAccountResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,7 @@ public class AccountsController {
 
     // Create Transfer Request Endpoint
     @PostMapping(path = "/accounts", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TransferResponse> createAccount(@RequestBody CreateAccountRequest request) {
+    public ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request) {
 
         logger.info("Create Account Request Received");
 
@@ -46,7 +47,11 @@ public class AccountsController {
         logger.info("Publishing event to Dapr Pub/Sub Broker: %s, %s".formatted(PUBSUB_NAME, request.toString()));
         client.publishEvent(PUBSUB_NAME, TOPIC_NAME, request).block();
 
-        return ResponseEntity.ok(TransferResponse.builder()
+        return ResponseEntity.ok(CreateAccountResponse.builder()
+                .account(AccountResponse.builder()
+                        .owner(request.getOwner())
+                        .amount(request.getAmount())
+                        .build())
                 .message(message)
                 .build());
     }
