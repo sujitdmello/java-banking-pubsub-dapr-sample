@@ -1,11 +1,9 @@
 package org.azdaks.test.e2e.util;
 
 public class Assert {
-    public static void statusCodeOk(int statusCode, String successMessage, String errorMessage) throws Exception {
-        var expectedStatusCode = statusCode == 200;
-
-        if (!expectedStatusCode) {
-            Print.message(errorMessage + ", Expected: 200, Actual: " + statusCode);
+    public static void matchesStatusCode(int expectedStatusCode, int actualStatusCode, String successMessage, String errorMessage) throws Exception {
+        if (actualStatusCode != expectedStatusCode) {
+            Print.message(errorMessage + ", Expected: " + expectedStatusCode + ", Actual: " + actualStatusCode);
             throw new Exception(errorMessage);
         }
 

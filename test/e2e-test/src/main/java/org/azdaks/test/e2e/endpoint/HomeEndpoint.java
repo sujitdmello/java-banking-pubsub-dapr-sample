@@ -2,23 +2,18 @@ package org.azdaks.test.e2e.endpoint;
 
 import org.azdaks.test.e2e.contract.response.ApiResponse;
 import org.azdaks.test.e2e.contract.response.HomeResponse;
+import org.azdaks.test.e2e.util.ApiRequest;
 import org.azdaks.test.e2e.util.Print;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class HomeEndpoint implements Endpoint<HomeResponse> {
 
     @Override
     public ApiResponse<HomeResponse> execute(Executor executor) throws URISyntaxException, IOException, InterruptedException {
-        var request = HttpRequest.newBuilder()
-                .uri(new URI(executor.getSettings().getApiUrl()))
-                .GET()
-                .build();
-
+        var request = ApiRequest.buildGetRequest(executor.getSettings().getApiUrl());
 
         var response = executor.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         Print.response(response.body());

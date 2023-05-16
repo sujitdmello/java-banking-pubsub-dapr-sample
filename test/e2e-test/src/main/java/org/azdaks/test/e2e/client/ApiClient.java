@@ -2,6 +2,7 @@ package org.azdaks.test.e2e.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.azdaks.test.e2e.endpoint.CreateAccountEndpoint;
+import org.azdaks.test.e2e.endpoint.CreateMoneyTransferEndpoint;
 import org.azdaks.test.e2e.endpoint.Executor;
 import org.azdaks.test.e2e.endpoint.HomeEndpoint;
 import org.azdaks.test.e2e.util.Assert;
@@ -35,7 +36,7 @@ public class ApiClient {
 
         var result = new HomeEndpoint().execute(_executor);
 
-        Assert.statusCodeOk(result.getResponse().statusCode(), "✅ Application is Running", "🛑 Application is Not Running");
+        Assert.matchesStatusCode(200, result.getResponse().statusCode(), "✅ Application is Running", "🛑 Application is Not Running");
         Assert.contentContains("Public API Service Started", result.getBody().getMessage(), "✅ Application is Running Correctly", "🛑 Application is Not Running Correctly");
     }
 
@@ -45,16 +46,22 @@ public class ApiClient {
 
         var result = new CreateAccountEndpoint().execute(_executor);
 
-        Assert.statusCodeOk(result.getResponse().statusCode(), "✅ Account Created", "🛑 Account Creation Failed");
+        Assert.matchesStatusCode(200, result.getResponse().statusCode(), "✅ Account Created", "🛑 Account Creation Failed");
         Assert.contentMatches(_executor.getSettings().getOwner(), result.getBody().getAccount().getOwner(), "✅ Account Owner is Correct", "🛑 Account Owner is Not Correct");
         Assert.contentMatches(_executor.getSettings().getAmount(), result.getBody().getAccount().getAmount(), "✅ Account Amount is Correct", "🛑 Account Amount is Not Correct");
     }
 
-    public void createMoneyTransfer() {
+    public void createMoneyTransfer() throws Exception {
         Print.section("2. Test Create Money Transfer");
+        Print.message("👀 Test Money Transfer Creation");
+
+        var result = new CreateMoneyTransferEndpoint().execute(_executor);
+
+        Assert.matchesStatusCode(202, result.getResponse().statusCode(), "✅ Money Transfer Created", "🛑 Money Transfer Creation Failed");
+        Assert.contentMatches("ACCEPTED", result.getBody().getStatus(), "✅ Money Transfer Status is Correct", "🛑 Money Transfer Status is Not Correct");
     }
 
-    public void checkMoneyTransfer() {
+    public void checkMoneyTransfer() throws Exception {
         Print.section("3. Test Money Transfer Completed");
     }
 }
