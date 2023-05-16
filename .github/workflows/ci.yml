@@ -18,7 +18,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-
       - name: Install Dapr
         run: |
           wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
@@ -29,11 +28,10 @@ jobs:
       - name: Deploy Local
         run: make deploy-local
 
-      - name: Forward Port Local
-        run: make forward-local
-
       - name: Test
-        run: make test-local
+        run: |
+          make port-forward-local
+          make test-local
 
       # - name: Login to GH-CR to push the updated devcontainer image
       #   uses: docker/login-action@v2
