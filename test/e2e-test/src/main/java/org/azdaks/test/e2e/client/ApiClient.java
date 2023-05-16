@@ -4,7 +4,8 @@ import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.azdaks.test.e2e.contract.request.CreateAccountRequest;
 import org.azdaks.test.e2e.contract.response.CreateAccountResponse;
-import org.azdaks.test.e2e.contract.response.HomeResponse;
+import org.azdaks.test.e2e.endpoint.HomeEndpoint;
+import org.azdaks.test.e2e.util.Assert;
 import org.azdaks.test.e2e.util.Printer;
 
 import java.net.URI;
@@ -39,40 +40,18 @@ public class ApiClient {
         Printer.section("0. Application Running");
 
         Printer.message("👀 Test Application is Running");
-        var request = HttpRequest.newBuilder()
-                .uri(new URI(_settings.getApiUrl()))
-                .GET()
-                .build();
 
+        var homeEndpoint = new HomeEndpoint(_settings, _objectMapper);
+        var result = homeEndpoint.execute();
 
-        var response = _httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        Printer.response(response.body());
-
-        var homeResponse = _objectMapper.readValue(response.body(), HomeResponse.class);
-
-        var expectedStatusCode = response.statusCode() == 200;
-        var expectedMessageContent = "Public API Service Started";
-        var expectedMessage = homeResponse.getMessage().contains(expectedMessageContent);
-
-        if (!expectedStatusCode) {
-            var errorMessage = "🛑 Application is Down";
-            Printer.message(errorMessage);
-            throw new Exception(errorMessage);
-        }
-
-        Printer.message("✅ Application is Running");
-
-        if (!expectedMessage) {
-            var errorMessage = "🛑 Application is Not Running Expected Message, Expected:" + expectedMessageContent;
-            Printer.message(errorMessage);
-            throw new Exception(errorMessage);
-        }
-
-        Printer.message("✅ Application is Running Correctly");
+        Assert.statusCodeOk(result.getResponse().statusCode(), "✅ Application is Running", "🛑 Application is Not Running");
+        Assert.contentContains("Public API Service Started", result.getBody().getMessage(), "✅ Application is Running Correctly", "🛑 Application is Not Running Correctly");
     }
 
     public void createAccount() throws Exception {
         Printer.section("1. Test Create Account");
+
+        Printer.message("👀 Test Account Creation");
 
         var createAccountRequest = CreateAccountRequest.builder()
                 .owner(_owner)

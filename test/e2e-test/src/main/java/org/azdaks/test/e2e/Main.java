@@ -20,7 +20,7 @@ public class Main {
         apiClient.checkApplicationIsRunning();
         apiClient.createAccount();
         apiClient.createMoneyTransfer();
-        apiClient.createMoneyTransfer();
+        apiClient.checkMoneyTransfer();
     }
 
 
