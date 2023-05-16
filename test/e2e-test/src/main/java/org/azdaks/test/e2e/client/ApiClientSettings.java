@@ -8,4 +8,6 @@ import lombok.Getter;
 public class ApiClientSettings {
     private String apiUrl;
     private int timeoutSeconds;
+    private String owner;
+    private double amount;
 }

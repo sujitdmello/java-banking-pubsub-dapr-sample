@@ -6,5 +6,5 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 public interface Endpoint<T> {
-    ApiResponse<T> execute() throws URISyntaxException, IOException, InterruptedException;
+    ApiResponse<T> execute(Executor executor) throws URISyntaxException, IOException, InterruptedException;
 }

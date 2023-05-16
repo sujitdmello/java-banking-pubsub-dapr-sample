@@ -1,39 +1,32 @@
 package org.azdaks.test.e2e.client;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.azdaks.test.e2e.contract.request.CreateAccountRequest;
-import org.azdaks.test.e2e.contract.response.CreateAccountResponse;
+import org.azdaks.test.e2e.endpoint.CreateAccountEndpoint;
+import org.azdaks.test.e2e.endpoint.Executor;
 import org.azdaks.test.e2e.endpoint.HomeEndpoint;
 import org.azdaks.test.e2e.util.Assert;
 import org.azdaks.test.e2e.util.Printer;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.Random;
 
 public class ApiClient {
 
-    private final ApiClientSettings _settings;
-    private final HttpClient _httpClient;
-    private final ObjectMapper _objectMapper;
-    private final String _owner;
-    private final float _amount;
+    private final Executor _executor;
 
     public ApiClient(ApiClientSettings settings) {
-        _settings = settings;
 
-        _httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(_settings.getTimeoutSeconds()))
+        var _httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(settings.getTimeoutSeconds()))
                 .build();
 
-        _objectMapper = new ObjectMapper();
+        var _objectMapper = new ObjectMapper();
 
-        _owner = NanoIdUtils.randomNanoId(new Random(), NanoIdUtils.DEFAULT_ALPHABET, 10);
-        _amount = 1000.0f;
+        _executor = Executor.builder()
+                .settings(settings)
+                .httpClient(_httpClient)
+                .objectMapper(_objectMapper)
+                .build();
     }
 
     public void checkApplicationIsRunning() throws Exception {
@@ -41,8 +34,7 @@ public class ApiClient {
 
         Printer.message("👀 Test Application is Running");
 
-        var homeEndpoint = new HomeEndpoint(_settings, _objectMapper);
-        var result = homeEndpoint.execute();
+        var result = new HomeEndpoint().execute(_executor);
 
         Assert.statusCodeOk(result.getResponse().statusCode(), "✅ Application is Running", "🛑 Application is Not Running");
         Assert.contentContains("Public API Service Started", result.getBody().getMessage(), "✅ Application is Running Correctly", "🛑 Application is Not Running Correctly");
@@ -53,51 +45,11 @@ public class ApiClient {
 
         Printer.message("👀 Test Account Creation");
 
-        var createAccountRequest = CreateAccountRequest.builder()
-                .owner(_owner)
-                .amount(_amount)
-                .build();
+        var result = new CreateAccountEndpoint().execute(_executor);
 
-        var payload = _objectMapper.writeValueAsString(createAccountRequest);
-        Printer.request(payload);
-
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create(_settings.getApiUrl() + "/accounts"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(_objectMapper.writeValueAsString(createAccountRequest)))
-                .build();
-
-        var response = _httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        Printer.response(response.body());
-
-        var createAccountResponse = _objectMapper.readValue(response.body(), CreateAccountResponse.class);
-
-        var expectedStatusCode = response.statusCode() == 200;
-        if (!expectedStatusCode) {
-            var errorMessage = "🛑 Account Creating Failed";
-            Printer.message(errorMessage);
-            throw new Exception(errorMessage);
-        }
-
-        Printer.message("✅ Account Created");
-
-        var expectedOwner = createAccountResponse.getAccount().getOwner();
-        if (!expectedOwner.equals(_owner)) {
-            var errorMessage = "🛑 Account Owner is Not Correct, Expected:" + _owner;
-            Printer.message(errorMessage);
-            throw new Exception(errorMessage);
-        }
-
-        Printer.message("✅ Account Owner is Correct");
-
-        var expectedAmount = createAccountResponse.getAccount().getAmount();
-        if (expectedAmount != _amount) {
-            var errorMessage = "🛑 Account Amount is Not Correct, Expected:" + _amount;
-            Printer.message(errorMessage);
-            throw new Exception(errorMessage);
-        }
-
-        Printer.message("✅ Account Amount is Correct");
+        Assert.statusCodeOk(result.getResponse().statusCode(), "✅ Account Created", "🛑 Account Creation Failed");
+        Assert.contentMatches(_executor.getSettings().getOwner(), result.getBody().getAccount().getOwner(), "✅ Account Owner is Correct", "🛑 Account Owner is Not Correct");
+        Assert.contentMatches(_executor.getSettings().getAmount(), result.getBody().getAccount().getAmount(), "✅ Account Amount is Correct", "🛑 Account Amount is Not Correct");
     }
 
     public void createMoneyTransfer() {
