@@ -1,6 +1,8 @@
-package org.azdaks.test.e2e.api;
+package org.azdaks.test.e2e;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.azdaks.test.e2e.api.ApiClient;
+import org.azdaks.test.e2e.api.ApiClientSettings;
 import org.azdaks.test.e2e.contract.response.CreateAccountResponse;
 import org.azdaks.test.e2e.contract.response.HomeResponse;
 import org.azdaks.test.e2e.contract.response.TransferResponse;
@@ -13,13 +15,13 @@ import org.azdaks.test.e2e.util.Print;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
-public class ApiTestRunner {
+public class TestRunner {
 
     private final HttpClient _httpClient;
     private final ObjectMapper _objectMapper;
     private final ApiClientSettings _settings;
 
-    public ApiTestRunner(ApiClientSettings settings) {
+    public TestRunner(ApiClientSettings settings) {
 
         _settings = settings;
 
@@ -28,6 +30,12 @@ public class ApiTestRunner {
                 .build();
 
         _objectMapper = new ObjectMapper();
+    }
+
+    public void run() throws Exception {
+        checkApplicationIsRunning();
+        createAccount();
+        createMoneyTransfer();
     }
 
     public void checkApplicationIsRunning() throws Exception {

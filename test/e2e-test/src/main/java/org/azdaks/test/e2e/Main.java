@@ -1,8 +1,7 @@
 package org.azdaks.test.e2e;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import org.azdaks.test.e2e.client.ApiClient;
-import org.azdaks.test.e2e.client.ApiClientSettings;
+import org.azdaks.test.e2e.api.ApiClientSettings;
 
 import java.util.Random;
 
@@ -23,12 +22,7 @@ public class Main {
                 .amount(amount)
                 .build();
 
-        var apiClient = new ApiClient(apiSettings);
-
-        apiClient.checkApplicationIsRunning();
-        apiClient.createAccount();
-        apiClient.createMoneyTransfer();
-        apiClient.checkMoneyTransfer();
+        new TestRunner(apiSettings).run();
     }
 
 

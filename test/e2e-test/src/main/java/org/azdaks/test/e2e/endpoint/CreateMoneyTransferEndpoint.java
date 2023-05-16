@@ -1,37 +1,27 @@
 package org.azdaks.test.e2e.endpoint;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.azdaks.test.e2e.api.ApiClientSettings;
+import org.azdaks.test.e2e.api.ApiRequest;
 import org.azdaks.test.e2e.contract.request.CreateTransferRequest;
-import org.azdaks.test.e2e.contract.response.ApiResponse;
-import org.azdaks.test.e2e.contract.response.TransferResponse;
-import org.azdaks.test.e2e.util.ApiRequest;
 import org.azdaks.test.e2e.util.Print;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.http.HttpResponse;
+import java.net.http.HttpRequest;
 
-public class CreateMoneyTransferEndpoint implements Endpoint<TransferResponse> {
+public class CreateMoneyTransferEndpoint implements Endpoint {
+
     @Override
-    public ApiResponse<TransferResponse> execute(Executor executor) throws URISyntaxException, IOException, InterruptedException {
+    public HttpRequest createRequest(ApiClientSettings settings, ObjectMapper objectMapper) throws IOException {
         var createTransferRequest = CreateTransferRequest.builder()
-                .sender(executor.getSettings().getOwner())
+                .sender(settings.getOwner())
                 .receiver("Receiver")
                 .amount(10.0d)
                 .build();
 
-        var payload = executor.getObjectMapper().writeValueAsString(createTransferRequest);
+        var payload = objectMapper.writeValueAsString(createTransferRequest);
         Print.request(payload);
 
-        var request = ApiRequest.buildPostRequest(executor.getSettings().getApiUrl() + "/transfers", payload);
-
-        var result = executor.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        Print.response(result.body());
-
-        var response = executor.getObjectMapper().readValue(result.body(), TransferResponse.class);
-
-        return ApiResponse.<TransferResponse>builder()
-                .response(result)
-                .body(response)
-                .build();
+        return ApiRequest.buildPostRequest(settings.getApiUrl() + "/transfers", payload);
     }
 }

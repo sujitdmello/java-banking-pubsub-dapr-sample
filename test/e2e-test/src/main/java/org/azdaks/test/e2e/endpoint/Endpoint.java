@@ -1,10 +1,11 @@
 package org.azdaks.test.e2e.endpoint;
 
-import org.azdaks.test.e2e.contract.response.ApiResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.azdaks.test.e2e.api.ApiClientSettings;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.net.http.HttpRequest;
 
-public interface Endpoint<T> {
-    ApiResponse<T> execute(Executor executor) throws URISyntaxException, IOException, InterruptedException;
+public interface Endpoint {
+    HttpRequest createRequest(ApiClientSettings settings, ObjectMapper objectMapper) throws IOException;
 }

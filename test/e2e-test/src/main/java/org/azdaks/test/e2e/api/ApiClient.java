@@ -1,14 +1,13 @@
-package org.azdaks.test.e2e.client;
+package org.azdaks.test.e2e.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Getter;
-import org.azdaks.test.e2e.contract.response.ApiResponse;
+import org.azdaks.test.e2e.endpoint.Endpoint;
 import org.azdaks.test.e2e.util.Print;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 @Builder
@@ -17,8 +16,10 @@ public class ApiClient<T> {
     private ApiClientSettings settings;
     private HttpClient httpClient;
     private ObjectMapper objectMapper;
+    private Endpoint endpoint;
 
-    public ApiResponse<T> send(HttpRequest request, Class<T> response) throws IOException, InterruptedException {
+    public ApiResponse<T> send(Class<T> response) throws IOException, InterruptedException {
+        var request = endpoint.createRequest(settings, objectMapper);
         var result = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         Print.response(result.body());
 

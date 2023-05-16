@@ -1,4 +1,4 @@
-package org.azdaks.test.e2e.util;
+package org.azdaks.test.e2e.api;
 
 import java.net.URI;
 import java.net.http.HttpRequest;

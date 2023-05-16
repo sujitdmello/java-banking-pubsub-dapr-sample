@@ -1,4 +1,4 @@
-package org.azdaks.test.e2e.contract.response;
+package org.azdaks.test.e2e.api;
 
 import lombok.Builder;
 import lombok.Getter;
