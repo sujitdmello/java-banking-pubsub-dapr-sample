@@ -27,19 +27,19 @@ jobs:
 
       # This will use a cached image if avaialble. It will push the image if the build is
       # successful and on the main branch.
-      - name: Build using the DevContainer
-        uses: devcontainers/ci@v0.3
-        with:
-          imageName: ghcr.io/ross-p-smith/azd-aks
-          cacheFrom: ghcr.io/ross-p-smith/azd-aks
-          refFilterForPush: refs/heads/main
-          runCmd: make all-azure
-          env: |
-            GITHUB_WORKSPACE
-            ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}
-            ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
-            ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}
-            ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}
-            RESOURCE_GROUP=${{ vars.RESOURCE_GROUP }}
-            CLUSTER_NAME=${{ vars.CLUSTER_NAME }}
-            ACR_NAME=${{ vars.ACR_NAME }}
+      # - name: Build using the DevContainer
+      #   uses: devcontainers/ci@v0.3
+      #   with:
+      #     imageName: ghcr.io/ross-p-smith/azd-aks
+      #     cacheFrom: ghcr.io/ross-p-smith/azd-aks
+      #     refFilterForPush: refs/heads/main
+      #     runCmd: make all-azure
+      #     env: |
+      #       GITHUB_WORKSPACE
+      #       ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}
+      #       ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
+      #       ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}
+      #       ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}
+      #       RESOURCE_GROUP=${{ vars.RESOURCE_GROUP }}
+      #       CLUSTER_NAME=${{ vars.CLUSTER_NAME }}
+      #       ACR_NAME=${{ vars.ACR_NAME }}
