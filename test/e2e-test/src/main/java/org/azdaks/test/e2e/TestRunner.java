@@ -1,9 +1,11 @@
-package org.azdaks.test.e2e.client;
+package org.azdaks.test.e2e.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.azdaks.test.e2e.contract.response.CreateAccountResponse;
+import org.azdaks.test.e2e.contract.response.HomeResponse;
+import org.azdaks.test.e2e.contract.response.TransferResponse;
 import org.azdaks.test.e2e.endpoint.CreateAccountEndpoint;
 import org.azdaks.test.e2e.endpoint.CreateMoneyTransferEndpoint;
-import org.azdaks.test.e2e.endpoint.Executor;
 import org.azdaks.test.e2e.endpoint.HomeEndpoint;
 import org.azdaks.test.e2e.util.Assert;
 import org.azdaks.test.e2e.util.Print;
@@ -11,30 +13,34 @@ import org.azdaks.test.e2e.util.Print;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
-public class ApiClient {
+public class ApiTestRunner {
 
-    private final Executor _executor;
+    private final HttpClient _httpClient;
+    private final ObjectMapper _objectMapper;
+    private final ApiClientSettings _settings;
 
-    public ApiClient(ApiClientSettings settings) {
+    public ApiTestRunner(ApiClientSettings settings) {
 
-        var _httpClient = HttpClient.newBuilder()
+        _settings = settings;
+
+        _httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(settings.getTimeoutSeconds()))
                 .build();
 
-        var _objectMapper = new ObjectMapper();
-
-        _executor = Executor.builder()
-                .settings(settings)
-                .httpClient(_httpClient)
-                .objectMapper(_objectMapper)
-                .build();
+        _objectMapper = new ObjectMapper();
     }
 
     public void checkApplicationIsRunning() throws Exception {
         Print.section("0. Application Running");
         Print.message("👀 Test Application is Running");
 
-        var result = new HomeEndpoint().execute(_executor);
+        var result = ApiClient.<HomeResponse>builder()
+                .settings(_settings)
+                .httpClient(_httpClient)
+                .objectMapper(_objectMapper)
+                .endpoint(new HomeEndpoint())
+                .build()
+                .send(HomeResponse.class);
 
         Assert.matchesStatusCode(200, result.getResponse().statusCode(), "✅ Application is Running", "🛑 Application is Not Running");
         Assert.contentContains("Public API Service Started", result.getBody().getMessage(), "✅ Application is Running Correctly", "🛑 Application is Not Running Correctly");
@@ -44,18 +50,30 @@ public class ApiClient {
         Print.section("1. Test Create Account");
         Print.message("👀 Test Account Creation");
 
-        var result = new CreateAccountEndpoint().execute(_executor);
+        var result = ApiClient.<CreateAccountResponse>builder()
+                .settings(_settings)
+                .httpClient(_httpClient)
+                .objectMapper(_objectMapper)
+                .endpoint(new CreateAccountEndpoint())
+                .build()
+                .send(CreateAccountResponse.class);
 
         Assert.matchesStatusCode(200, result.getResponse().statusCode(), "✅ Account Created", "🛑 Account Creation Failed");
-        Assert.contentMatches(_executor.getSettings().getOwner(), result.getBody().getAccount().getOwner(), "✅ Account Owner is Correct", "🛑 Account Owner is Not Correct");
-        Assert.contentMatches(_executor.getSettings().getAmount(), result.getBody().getAccount().getAmount(), "✅ Account Amount is Correct", "🛑 Account Amount is Not Correct");
+        Assert.contentMatches(_settings.getOwner(), result.getBody().getAccount().getOwner(), "✅ Account Owner is Correct", "🛑 Account Owner is Not Correct");
+        Assert.contentMatches(_settings.getAmount(), result.getBody().getAccount().getAmount(), "✅ Account Amount is Correct", "🛑 Account Amount is Not Correct");
     }
 
     public void createMoneyTransfer() throws Exception {
         Print.section("2. Test Create Money Transfer");
         Print.message("👀 Test Money Transfer Creation");
 
-        var result = new CreateMoneyTransferEndpoint().execute(_executor);
+        var result = ApiClient.<TransferResponse>builder()
+                .settings(_settings)
+                .httpClient(_httpClient)
+                .objectMapper(_objectMapper)
+                .endpoint(new CreateMoneyTransferEndpoint())
+                .build()
+                .send(TransferResponse.class);
 
         Assert.matchesStatusCode(202, result.getResponse().statusCode(), "✅ Money Transfer Created", "🛑 Money Transfer Creation Failed");
         Assert.contentMatches("ACCEPTED", result.getBody().getStatus(), "✅ Money Transfer Status is Correct", "🛑 Money Transfer Status is Not Correct");
