@@ -30,7 +30,7 @@ jobs:
 
       - name: Test
         run: |
-          make port-forward-local
+          kubectl port-forward service/public-api-service 8080:80 --pod-running-timeout=3m0s &
           make test-local
 
       # - name: Login to GH-CR to push the updated devcontainer image
