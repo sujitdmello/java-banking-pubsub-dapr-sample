@@ -1,4 +1,4 @@
-package org.azdaks.test.e2e.client;
+package org.azdaks.test.e2e.api;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -8,4 +8,6 @@ import lombok.Getter;
 public class ApiClientSettings {
     private String apiUrl;
     private int timeoutSeconds;
+    private String owner;
+    private double amount;
 }

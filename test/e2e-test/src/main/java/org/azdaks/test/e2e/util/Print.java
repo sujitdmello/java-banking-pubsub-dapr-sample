@@ -1,6 +1,6 @@
 package org.azdaks.test.e2e.util;
 
-public class Printer {
+public class Print {
 
     public static void section(String title) {
         System.out.println("-------------------------------------------------");
