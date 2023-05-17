@@ -3,6 +3,7 @@ package org.azdaks.test.e2e.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Getter;
+import org.azdaks.test.e2e.TestSettings;
 import org.azdaks.test.e2e.endpoint.Endpoint;
 import org.azdaks.test.e2e.util.Print;
 
@@ -13,7 +14,7 @@ import java.net.http.HttpResponse;
 @Builder
 @Getter
 public class ApiClient<T> {
-    private ApiClientSettings settings;
+    private TestSettings settings;
     private HttpClient httpClient;
     private ObjectMapper objectMapper;
     private Endpoint endpoint;

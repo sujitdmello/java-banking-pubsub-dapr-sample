@@ -13,4 +13,7 @@ public class TransferResponse {
     private String message;
     private String status;
     private String transferId;
+    private String sender;
+    private String receiver;
+    private double amount;
 }

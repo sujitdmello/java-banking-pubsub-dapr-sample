@@ -1,7 +1,6 @@
 package org.azdaks.test.e2e;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import org.azdaks.test.e2e.api.ApiClientSettings;
 
 import java.util.Random;
 
@@ -14,15 +13,19 @@ public class Main {
 
         var owner = NanoIdUtils.randomNanoId(new Random(), NanoIdUtils.DEFAULT_ALPHABET, 10);
         var amount = 1000.0d;
+        var transferAmount = 100.0d;
+        var fraudAmount = 10000.0d;
 
-        var apiSettings = ApiClientSettings.builder()
+        var testSettings = TestSettings.builder()
                 .apiUrl(API_URL)
                 .timeoutSeconds(TIMEOUT_SECONDS)
                 .owner(owner)
                 .amount(amount)
+                .transferAmount(transferAmount)
+                .fraudAmount(fraudAmount)
                 .build();
 
-        new TestRunner(apiSettings).run();
+        new TestRunner(testSettings).run();
     }
 
 
