@@ -1,9 +1,20 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: azd-aks
-infra:
-    provider: ""
-    path: ""
-    module: ""
-pipeline:
-    provider: ""
+name: java-banking-pubsub-dapr-sample
+services:
+  public-api-service:
+    project: ./src/public-api-service
+    language: java
+    host: aks
+  account-service:
+    project: ./src/account-service
+    language: java
+    host: aks
+  fraud-service:
+    project: ./src/fraud-service
+    language: java
+    host: aks
+  notification-service:
+    project: ./src/notification-service
+    language: java
+    host: aks
