@@ -31,16 +31,30 @@ public class TestRunner {
     }
 
     public void run() throws Exception {
+        Print.section("0. Application Running");
         testApplicationIsRunning();
+
+        Print.section("1. Test Create Account");
         testCreateAccount();
+
+        Print.section("2. Test Create Money Transfer");
         testCreateMoneyTransfer();
+
+        Print.section("3. Test Money Transfer Completed");
         testMoneyTransferCompletion();
+
+        Print.section("4. Test Account Balance");
         testAccountBalanceAfterTransfer();
+
+        Print.section("5. Test Fraud Money Transfer");
         testFraudMoneyTransfer();
+
+        Print.section("6. Test Insufficient Funds Money Transfer");
+        testInsufficientFundsMoneyTransfer();
     }
 
     public void testApplicationIsRunning() throws Exception {
-        Print.section("0. Application Running");
+
         Print.message("👀 Test Application is Running");
 
         var result = ApiClient.<HomeResponse>builder()
@@ -56,7 +70,7 @@ public class TestRunner {
     }
 
     public void testCreateAccount() throws Exception {
-        Print.section("1. Test Create Account");
+
         Print.message("👀 Test Account Creation");
 
         var result = ApiClient.<CreateAccountResponse>builder()
@@ -73,7 +87,7 @@ public class TestRunner {
     }
 
     public void testCreateMoneyTransfer() throws Exception {
-        Print.section("2. Test Create Money Transfer");
+
         Print.message("👀 Test Money Transfer Creation");
 
         var result = ApiClient.<TransferResponse>builder()
@@ -91,7 +105,7 @@ public class TestRunner {
     }
 
     public void testMoneyTransferCompletion() throws Exception {
-        Print.section("3. Test Money Transfer Completed");
+
         Print.message("👀 Test Money Transfer Status");
 
         Print.message("⏳ Waiting 5 seconds for Money Transfer to Complete");
@@ -115,7 +129,7 @@ public class TestRunner {
     }
 
     public void testAccountBalanceAfterTransfer() throws Exception {
-        Print.section("4. Test Account Balance");
+
         Print.message("👀 Test Account Balance");
 
         Print.message("⏳ Waiting 5 seconds for Money Transfer to Reflect in Account Balance");
@@ -134,7 +148,6 @@ public class TestRunner {
     }
 
     public void testFraudMoneyTransfer() throws Exception {
-        Print.section("5. Test Fraud Money Transfer");
         Print.message("👀 Test Fraud Money Transfer");
 
         var createResult = ApiClient.<TransferResponse>builder()
@@ -164,5 +177,47 @@ public class TestRunner {
 
         Assert.matchesStatusCode(200, result.getResponse().statusCode(), "✅ Fraud Check Completed", "🛑 Fraud Check Failed");
         Assert.contentMatches("REJECTED", result.getBody().getStatus(), "✅ Fraud Check Status is Correct", "🛑 Fraud Check Status is Not Correct");
+    }
+
+    private void testInsufficientFundsMoneyTransfer() throws Exception {
+        _settings.setOwner("InsufficientFunds");
+        _settings.setAmount(10);
+
+        testCreateAccount();
+
+        var getAccount = ApiClient.<AccountResponse>builder()
+                .settings(_settings)
+                .httpClient(_httpClient)
+                .objectMapper(_objectMapper)
+                .endpoint(new GetAccountEndpoint())
+                .build()
+                .send(AccountResponse.class);
+
+        var insufficientFundsAmount = getAccount.getBody().getAmount() + 1;
+
+        _settings.setTransferAmount(insufficientFundsAmount);
+
+        testCreateMoneyTransfer();
+
+        Print.message("👀 Test Insufficient Funds Money Transfer");
+
+        Print.message("⏳ Waiting 5 seconds for Money Transfer to be Checked");
+        Thread.sleep(Duration.ofSeconds(5).toMillis());
+
+        var result = ApiClient.<TransferResponse>builder()
+                .settings(_settings)
+                .httpClient(_httpClient)
+                .objectMapper(_objectMapper)
+                .endpoint(new GetMoneyTransferEndpoint())
+                .build()
+                .send(TransferResponse.class);
+
+
+        Assert.matchesStatusCode(200, result.getResponse().statusCode(), "✅ Money Transfer Completed", "🛑 Money Transfer Completion Failed");
+        Assert.contentMatches("INSUFFICIENT_FUNDS", result.getBody().getStatus(), "✅ Money Transfer Status is Correct", "🛑 Money Transfer Status is Not Correct");
+        Assert.contentMatches(_settings.getTransferAmount(), result.getBody().getAmount(), "✅ Money Transfer Amount is Correct", "🛑 Money Transfer Amount is Not Correct");
+        Assert.contentMatches(_settings.getOwner(), result.getBody().getSender(), "✅ Money Transfer Sender is Correct", "🛑 Money Transfer Sender is Not Correct");
+        Assert.contentMatches("Receiver", result.getBody().getReceiver(), "✅ Money Transfer Receiver is Correct", "🛑 Money Transfer Receiver is Not Correct");
+        Assert.contentMatches(_settings.getTransferId(), result.getBody().getTransferId(), "✅ Money Transfer Id is Correct", "🛑 Money Transfer Id is Not Correct");
     }
 }

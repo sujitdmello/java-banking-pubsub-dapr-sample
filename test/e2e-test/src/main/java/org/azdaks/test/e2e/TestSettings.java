@@ -9,8 +9,14 @@ import lombok.Setter;
 public class TestSettings {
     private String apiUrl;
     private int timeoutSeconds;
+
+    @Setter
     private String owner;
+
+    @Setter
     private double amount;
+
+    @Setter
     private double transferAmount;
     private double fraudAmount;
 
