@@ -7,10 +7,9 @@ import org.azdaks.test.e2e.api.ApiRequest;
 import java.io.IOException;
 import java.net.http.HttpRequest;
 
-public class HomeEndpoint implements Endpoint {
+public class GetAccountEndpoint implements Endpoint {
     @Override
     public HttpRequest createRequest(TestSettings settings, ObjectMapper objectMapper) throws IOException {
-        return ApiRequest.buildGetRequest(settings.getApiUrl());
+        return ApiRequest.buildGetRequest(settings.getApiUrl() + "/accounts/" + settings.getOwner());
     }
-
 }

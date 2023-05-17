@@ -9,14 +9,14 @@ import org.azdaks.test.e2e.util.Print;
 import java.io.IOException;
 import java.net.http.HttpRequest;
 
-public class CreateMoneyTransferEndpoint implements Endpoint {
+public class CreateFraudMoneyTransferEndpoint implements Endpoint {
 
     @Override
     public HttpRequest createRequest(TestSettings settings, ObjectMapper objectMapper) throws IOException {
         var createTransferRequest = CreateTransferRequest.builder()
                 .sender(settings.getOwner())
                 .receiver("Receiver")
-                .amount(settings.getTransferAmount())
+                .amount(settings.getFraudAmount())
                 .build();
 
         var payload = objectMapper.writeValueAsString(createTransferRequest);
