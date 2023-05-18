@@ -10,7 +10,9 @@
 			"installMaven": "false",
 			"installGradle": "true"
 		},
-		"ghcr.io/devcontainers/features/azure-cli:1": {},
+		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"extensions": "k8s-extension"
+		},
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
 		"ghcr.io/mpriscella/features/kind:1": {},
 		"ghcr.io/devcontainers-contrib/features/redis-homebrew:1": {},
