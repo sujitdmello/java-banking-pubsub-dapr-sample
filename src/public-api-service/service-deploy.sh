@@ -64,6 +64,21 @@ docker push "${hostname}/${serviceName}":"${version}"
 printf "\n🚀  Deploying to cluster\n\n"
 cat <<EOF | kubectl apply -f -
 
+kind: Service
+apiVersion: v1
+metadata:
+  name: ${serviceName}
+  labels:
+    app: ${serviceName}
+spec:
+  selector:
+    app: ${serviceName}
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
