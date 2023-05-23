@@ -331,8 +331,7 @@ az account set --subscription <subscription-id>
 When your subscription is set, you can check the current registration status of the features and resource providers:
 
 ```bash
-az feature list --query "[?contains(name, 'AKS-ExtensionManager')].{Name:name,State:properties.state}" --output table
-az feature list --query "[?contains(name, 'AKS-Dapr')].{Name:name,State:properties.state}" --output table
+az feature list --query "[?name=='Microsoft.ContainerService/AKS-Dapr' || name=='Microsoft.ContainerService/AKS-ExtensionManager'].{Name:name,State:properties.state}" --output table
 ```
 
 Then, register the features and resource providers:
@@ -342,7 +341,7 @@ Then, register the features and resource providers:
 az feature register --namespace "Microsoft.ContainerService" --name "AKS-ExtensionManager"
 az feature register --namespace "Microsoft.ContainerService" --name "AKS-Dapr"
 
-# refresh the resource providers for Kubernetes and ContainerService
+# invoke the resource providers for Kubernetes and ContainerService to propagate the registration
 az provider register --namespace Microsoft.KubernetesConfiguration
 az provider register --namespace Microsoft.ContainerService
 ```
