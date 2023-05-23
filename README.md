@@ -316,14 +316,31 @@ The following have to be registered in the azure subscription after logining in
 - AKS-ExtensionManager and AKS-Dapr features
 - Kubernetes and ContainerService resource providers
 
+First, make sure you have signed in to Azure CLI:
+
+```bash
+az login
+```
+
+Then, set the subscription you want to use:
+
+```bash
+az account set --subscription <subscription-id>
+```
+
+When your subscription is set, you can check the current registration status of the features and resource providers:
+
+```bash
+az feature list --query "[?contains(name, 'AKS-ExtensionManager')].{Name:name,State:properties.state}" --output table
+az feature list --query "[?contains(name, 'AKS-Dapr')].{Name:name,State:properties.state}" --output table
+```
+
+Then, register the features and resource providers:
+
 ```bash
 # register AKS-ExtensionManager and AKS-Dapr resource provider
 az feature register --namespace "Microsoft.ContainerService" --name "AKS-ExtensionManager"
 az feature register --namespace "Microsoft.ContainerService" --name "AKS-Dapr"
-
-# check if features registration is completed
-az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AKS-ExtensionManager')].{Name:name,State:properties.state}"
-az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AKS-Dapr')].{Name:name,State:properties.state}"
 
 # refresh the resource providers for Kubernetes and ContainerService
 az provider register --namespace Microsoft.KubernetesConfiguration
