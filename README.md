@@ -422,7 +422,76 @@ azd up
 This will output something like this:
 
 ```bash
+......
 
+Packaging services (azd package)
+
+  (✓) Done: Packaging service account-service
+  - Image Hash: sha256:f03ab78c43152afac5263975208301b994f328195741c5ae3cba407854c7722a
+  - Image Tag: java-banking-pubsub-dapr-sample/account-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851734
+  (✓) Done: Packaging service fraud-service
+  - Image Hash: sha256:7aa3ed7fdd27394d7bb9990c363b477f2ab0e7a9487338cc7f45203d00c3df7b
+  - Image Tag: java-banking-pubsub-dapr-sample/fraud-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851737
+  (✓) Done: Packaging service notification-service
+  - Image Hash: sha256:303bb6b3638f512601d99abba03b14ce74041e945abe8c9ba5a09623e57f518c
+  - Image Tag: java-banking-pubsub-dapr-sample/notification-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851740
+  (✓) Done: Packaging service public-api-service
+  - Image Hash: sha256:b4dcc470a2482b80cc97f2c21a1dd704c8a357c10d31c7b7f48c26ba4a39ae4d
+  - Image Tag: java-banking-pubsub-dapr-sample/public-api-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851744
+
+  ......
+
+  ✓) Done: Resource group: rg-java-banking-pubsub-dapr-sample
+  (✓) Done: Key vault: kv-5jkc2ah3kbvqw
+  (✓) Done: Container Registry: cr5jkc2ah3kbvqw
+  (✓) Done: AKS Managed Cluster: aks-5jkc2ah3kbvqw
+Executing postprovision hook => ./infra/dapr-install.sh
+📀 - Post-Provision hook - Installing DAPR AKS...
+Merged "aks-5jkc2ah3kbvqw" as current context in /Users/mahmutcanga/.kube/config
+
+......
+
+- Creating java-banking-pubsub-dapr-sample namespace...
+namespace/java-banking-pubsub-dapr-sample created
+
+🚀 Deploy Redis on AKS
+
+serviceaccount/redis created
+secret/redis created
+configmap/redis-configuration created
+configmap/redis-health created
+configmap/redis-scripts created
+service/redis-headless created
+service/redis-master created
+service/redis-replicas created
+statefulset.apps/redis-master created
+statefulset.apps/redis-replicas created
+
+🚀 Deploy pub-sub broker component backed by Redis
+
+component.dapr.io/money-transfer-pubsub created
+
+🚀 Deploy state store component backed Redis
+
+component.dapr.io/money-transfer-state created
+
+
+Deploying services (azd deploy)
+
+  (✓) Done: Deploying service account-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service fraud-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service notification-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service public-api-service
+  - Endpoint: http://20.101.13.7, (Service, Type: LoadBalancer)
+
+
+SUCCESS: Your application was provisioned and deployed to Azure in 16 minutes 19 seconds.
 
 ```
 
@@ -436,6 +505,12 @@ The Azure Developer CLI supports various extension points to customize your work
 ### 3. Interact with the application
 
 At this point, you have everything configured in your Azure environment. From here, you can start interacting with the application.
+
+The environment variables created along the deployment process could be used to interact with the application. You can run the following command to set the environment variables:
+
+```bash
+source <(azd env get-values)
+```
 
 To check if the API is running and healthy, let's get the public api of the `public-api-service` by running the following command:
 
