@@ -19,8 +19,6 @@ endif
 help: ## 💬 This help message :)
 	@grep -E '[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-all-azure: deploy-azure test-azure ## 🏃‍♀️ Run all the things in Azure
-
 ####### LOCAL #############
 start-local: ## 🧹 Setup local Kind Cluster
 	@echo -e "\e[34m$@\e[0m" || true
@@ -31,11 +29,9 @@ deploy-local: ## 🚀 Deploy application resources locally
 	@./scripts/deploy-services-local.sh
 	@echo -e "\e[34mYOU WILL NEED TO START A NEW TERMINAL AND RUN  make test\e[0m" || true
 
-
 test-local: ## 🧪 Run tests locally
 	@echo -e "\e[34m$@\e[0m" || true
 	@cd test/e2e-test && ./gradlew run
-
 
 run-local: clean start-local deploy-local ## 💿 Run app locally
 
@@ -61,10 +57,6 @@ dapr-components: ## 🏗️  List the Dapr Components
 	@dapr components -k
 
 ####### AZURE #############
-deploy-azure: ## 🚀 Deploy application resources in Azure
-	@echo -e "\e[34m$@\e[0m" || true
-	@./scripts/deploy-services-azure.sh
-
 test-azure: ## 🧪 Run tests in Azure
 	@echo -e "\e[34m$@\e[0m" || true
 	@./scripts/test.sh --azure

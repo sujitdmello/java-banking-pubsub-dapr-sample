@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+
 set -o errexit
 
 azure_deployment=0
@@ -35,7 +36,8 @@ do
 done
 
 if [ $azure_deployment -eq 1 ]; then
-  FRONT_END_IP=$(kubectl get service public-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  source <(azd env get-values)
+  FRONT_END_IP=$(kubectl get service public-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --namespace $AZURE_ENV_NAME)
 fi
 
 transfer=$(curl -X POST \
