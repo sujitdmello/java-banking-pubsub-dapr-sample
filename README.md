@@ -487,7 +487,7 @@ java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1    
 kubectl apply -f ./local/components/state.yaml --wait=true --namespace $AZURE_ENV_NAME
 ```
 
-You can check the pub-sub broker installation by running the following command:
+You can check the state store component installation by running the following command:
 
 ```bash
 dapr components -k --namespace $AZURE_ENV_NAME
