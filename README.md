@@ -398,7 +398,7 @@ We are going to use `java-banking-pubsub-dapr-sample` as the environment name fo
 azd init --environment java-banking-pubsub-dapr-sample
 ```
 
-When issuing the command above, azd asks for an azure subscription and geo-location. It also adds folders to your project to store the environment variables it creates along the deployment process
+The above command also adds folders to your project to store the environment variables it creates along the deployment process
 
 ```txt
 ├── .azure                     [ For storing Azure configurations]
@@ -410,10 +410,20 @@ When issuing the command above, azd asks for an azure subscription and geo-locat
 ### 2. Up & Running
 
 By just running `azd up`, azd will provision all the resources needed for this sample and deploy the application to the cluster.
-This command combines `azd provision` and `azd deploy` to achieve this.
+This command combines `azd provision` and `azd deploy` to achieve this. 
+
+When issuing the command below, you need to select an Azure Subscription and Location.
+Also while installing Dapr post-provision, you need to approve the installation of Dapr components interactively.
 
 ```bash
 azd up
+```
+
+This will output something like this:
+
+```bash
+
+
 ```
 
 The Azure Developer CLI supports various extension points to customize your workflows and deployments. The hooks middleware allows you to execute custom scripts before and after azd commands and service lifecycle events. In our setup, we are using `postprovision` hook to install:
