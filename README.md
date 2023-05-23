@@ -596,6 +596,19 @@ curl -X POST \
 }'
 ```
 
+This should return the following response:
+
+```json
+{
+  "account":
+  {
+    "owner":"A",
+    "amount":100.0
+  },
+  "message":"Account created for: Owner: A, Amount: 100.0"
+}
+```
+
 An example request to start a new transfer workflow is:
 
 ```curl
@@ -609,10 +622,32 @@ curl -X POST \
 }'
 ```
 
+This should return the following response:
+
+```json
+{
+  "message":"Transfer Request Started: Sender: A, Receiver: B, Amount: 100.0",
+  "status":"ACCEPTED",
+  "transferId":"14efc"
+}
+```
+
 You can query the status of a transfer:
 
 ```curl
 curl -X GET \
-  http://localhost:8080/transfers/{transferId} \
+  $PUBLIC_API_SERVICE/transfers/{transferId} \
   -H 'Content-Type: application/json'
+```
+
+This should return the following response:
+
+```json
+{
+  "sender":"A",
+  "receiver":"B",
+  "amount":100.0,
+  "transferId":"14efc",
+  "status":"COMPLETED"
+}
 ```
