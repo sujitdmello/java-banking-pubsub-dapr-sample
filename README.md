@@ -432,7 +432,7 @@ NAME                                  STATUS   AGE
 dapr-system                           Active   6m48s
 default                               Active   122m
 gatekeeper-system                     Active   121m
-java-banking-pubsub-dapr-sample-dev   Active   25s
+java-banking-pubsub-dapr-sample-dev   Active   25s   // <--- This is the namespace we created using $AZURE_ENV_NAME
 kube-node-lease                       Active   122m
 kube-public                           Active   122m
 kube-system                           Active   122m
