@@ -518,7 +518,7 @@ This will output something like this:
 Login Succeeded
 ```
 
-This command deploys all services defined in `azure.yaml` files in the namespace defined by the environment name, based on their individual deployment under `manifests` folder by `azd` convention.
+This command deploys all services defined in `azure.yaml` file in the namespace defined by the environment name, based on their individual deployment under `manifests` folder by `azd` convention.
 
 ```bash
 azd deploy
