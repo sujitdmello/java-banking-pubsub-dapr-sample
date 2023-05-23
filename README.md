@@ -93,7 +93,7 @@ Your local cluster will be laid out as follows:
 
 ### 2. Dapr Dashboard & Components
 
-You can validate that the setup finished successfully by navigating to <http://localhost:9000>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your default browser. This assumes you installed [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/) in your local machine.
+This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your default browser. This assumes you installed [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/) in your local machine. You can validate that the setup finished successfully by navigating to <http://localhost:9000>.
 
 ```bash
 make dapr-dashboard
@@ -123,7 +123,7 @@ By convention, every service under `/src` folder has 2 files:
 To deploy all services to the cluster, run the following command under `scripts` folder:
 
 ```bash
-make deploy
+make deploy-local
 ```
 
 The deployment script will do the following:
@@ -216,7 +216,7 @@ kube-system          kube-scheduler-azd-aks-control-plane            1/1     Run
 local-path-storage   local-path-provisioner-684f458cdd-wtmqh         1/1     Running   0              172m
 ```
 
-### 4. Connecting to Public API Service
+### 4. Interacting with the Application
 
 [Public API](/src/public-api-service) is deployed as `Loadbalancer` service type. In local cluster setup, it will not able to get public IP to connect.
 Instead, you can access this service locally using the Kubectl proxy tool.
@@ -227,11 +227,36 @@ make port-forward-local
 
 While this command is running, you can access the service at <http://localhost:8080>.
 
+First, you need to create a new account for a user:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/accounts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "owner": "A",
+    "amount": 100
+}'
+```
+
+This should return the following response:
+
+```json
+{
+  "account":
+  {
+    "owner":"A",
+    "amount":100.0
+  },
+  "message":"Account created for: Owner: A, Amount: 100.0"
+}
+```
+
 An example request to start a new transfer workflow is:
 
 ```curl
 curl -X POST \
-  http://localhost:8080/transfers \
+  $PUBLIC_API_SERVICE/transfers \
   -H 'Content-Type: application/json' \
   -d '{
     "sender": "A",
@@ -240,12 +265,34 @@ curl -X POST \
 }'
 ```
 
+This should return the following response:
+
+```json
+{
+  "message":"Transfer Request Started: Sender: A, Receiver: B, Amount: 100.0",
+  "status":"ACCEPTED",
+  "transferId":"14efc"
+}
+```
+
 You can query the status of a transfer:
 
 ```curl
 curl -X GET \
-  http://localhost:8080/transfers/{transferId} \
+  $PUBLIC_API_SERVICE/transfers/{transferId} \
   -H 'Content-Type: application/json'
+```
+
+This should return the following response:
+
+```json
+{
+  "sender":"A",
+  "receiver":"B",
+  "amount":100.0,
+  "transferId":"14efc",
+  "status":"COMPLETED"
+}
 ```
 
 ### 5. Delete Local Cluster
@@ -263,7 +310,6 @@ make clean
 - [X] Deposit workflow starts
   - [X] Fraud service checks the legitimacy of the operation and triggers [VALIDATED(Sender: A, Amount: 100, Receiver:B)]
   - [X] Account service checks if `Sender` has enough funds and triggers [APPROVED(Sender: A, Amount: 100, Receiver: B)]
-  - [ ] Notification services notifies both `Sender` and `Receiver`.
 - [X] Public API can be used to check if there is a confirmation of the money transfer request.
 
 ## How To
@@ -296,13 +342,11 @@ Get all keys in the state store:
 keys *
 ```
 
-## Azure Deployment [WIP]
+## Azure Deployment
 
-It's possible to deploy this application through Azure Developer (azd) CLI. azd is responsible for resource provision and application deployment requiring minimal interaction with azure in a developer point of view.
+It's possible to deploy this application through [Azure Developer (azd) CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/overview). `azd` is responsible for resource provision and application deployment requiring minimal interaction with Azure Portal.
 
-**The option for deploying everything with `azd up` is still a work in progress.** Currently a manual flow with `azd provision` and `azd deploy` is still required, as DAPR and Redis have to be installed in the cluster prior to the services to be deployed.
-
-For more information of azd CLI: [Make your project azd-compatible](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/make-azd-compatible?pivots=azd-create)
+For more information of `azd` CLI and how to [Make your project azd-compatible](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/make-azd-compatible?pivots=azd-create)
 
 ### Pre-requisites
 
@@ -311,7 +355,7 @@ The following are available in the devContainer environment:
 - Azure Developer CLI
 - Azure CLI with K8s-extension enabled
 
-The following have to be registered in the azure subscription after logining in
+The following have to be registered in the azure subscription after signing in:
 
 - AKS-ExtensionManager and AKS-Dapr features
 - Kubernetes and ContainerService resource providers
@@ -346,13 +390,15 @@ az provider register --namespace Microsoft.KubernetesConfiguration
 az provider register --namespace Microsoft.ContainerService
 ```
 
-### 1. Initiate azd environment
+### 1. Initiate Environment
+
+We are going to use `java-banking-pubsub-dapr-sample` as the environment name for this sample. To initiate an `azd` environment, run the following command:
 
 ```bash
-azd init
+azd init --environment java-banking-pubsub-dapr-sample
 ```
 
-When issuing the command above, azd asks for an azure subscription, environment name and geo-location. It also adds folders to your project to store the environment variables it creates along the deployment process
+When issuing the command above, azd asks for an azure subscription and geo-location. It also adds folders to your project to store the environment variables it creates along the deployment process
 
 ```txt
 ├── .azure                     [ For storing Azure configurations]
@@ -361,7 +407,130 @@ When issuing the command above, azd asks for an azure subscription, environment 
 │      └── config.json         [ Contains environment configuration ]
 ```
 
-### 2. Provision of Resources
+### 2. Up & Running
+
+By just running `azd up`, azd will provision all the resources needed for this sample and deploy the application to the cluster.
+This command combines `azd provision` and `azd deploy` to achieve this.
+
+```bash
+azd up
+```
+
+The Azure Developer CLI supports various extension points to customize your workflows and deployments. The hooks middleware allows you to execute custom scripts before and after azd commands and service lifecycle events. In our setup, we are using `postprovision` hook to install:
+
+- Dapr
+- Redis
+- Dapr Redis State Store
+- Dapr Redis Pub/Sub
+
+### 3. Interact with the application
+
+At this point, you have everything configured in your Azure environment. From here, you can start interacting with the application.
+
+To check if the API is running and healthy, let's get the public api of the `public-api-service` by running the following command:
+
+```bash
+kubectl get service public-api-service -n $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAME                 TYPE           CLUSTER-IP   EXTERNAL-IP    PORT(S)        AGE
+public-api-service   LoadBalancer   10.0.54.16   20.8.255.153   80:31319/TCP   2m27s
+```
+
+You can use the `EXTERNAL-IP` to access the API. You can run the following command to set the API endpoint available as environment variable:
+
+```bash
+PUBLIC_API_SERVICE=$(k get svc public-api-service -n $AZURE_ENV_NAME -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+To check if the API is running and healthy, run the following command:
+
+```bash
+curl $PUBLIC_API_SERVICE
+```
+
+This will output something like this:
+
+```bash
+{"message":"Public API Service Started, version: 1.0.0"}
+```
+
+### 4. Test the application
+
+First, you need to create a new account for a user:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/accounts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "owner": "A",
+    "amount": 100
+}'
+```
+
+This should return the following response:
+
+```json
+{
+  "account":
+  {
+    "owner":"A",
+    "amount":100.0
+  },
+  "message":"Account created for: Owner: A, Amount: 100.0"
+}
+```
+
+An example request to start a new transfer workflow is:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/transfers \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sender": "A",
+    "receiver": "B",
+    "amount": 100
+}'
+```
+
+This should return the following response:
+
+```json
+{
+  "message":"Transfer Request Started: Sender: A, Receiver: B, Amount: 100.0",
+  "status":"ACCEPTED",
+  "transferId":"14efc"
+}
+```
+
+You can query the status of a transfer:
+
+```curl
+curl -X GET \
+  $PUBLIC_API_SERVICE/transfers/{transferId} \
+  -H 'Content-Type: application/json'
+```
+
+This should return the following response:
+
+```json
+{
+  "sender":"A",
+  "receiver":"B",
+  "amount":100.0,
+  "transferId":"14efc",
+  "status":"COMPLETED"
+}
+```
+
+### 5. Manual Provisioning
+
+Alternatively, you can provision and deploy the application manually without the hook if you'd require further customization in your workflow.
 
 To deploy all the resources needed for this sample, run the following
 
@@ -371,7 +540,7 @@ azd provision
 
 This will set up a dedicated resource group in your subscription with a clean AKS cluster, a Container Registry for the cluster to pull images from, and a Keyvault for secrets' storage (needed for the AKS deployed through azd).
 
-### 3. Install Dapr and Redis on the Cluster
+#### 5.1. Install Dapr and Redis on the Cluster
 
 The variables used on the following commands are generated by azd and stored in `.azure/<your_env_name>/.env`
 
@@ -458,11 +627,11 @@ redis-master-0     1/1     Running   0             2m50s
 redis-replicas-0   0/1     Running   3 (28s ago)   2m50s
 ```
 
-### 4. Deploy PubSub and State Store components
+#### 5.2. Deploy PubSub and State Store components
 
 Now, we have an in-cluster Redis instance running. We can deploy the pub-sub and state store components for Dapr.
 
-#### 4.1. Deploy pub-sub broker component backed by Redis
+##### 5.2.1. Deploy pub-sub broker component backed by Redis
 
 ```bash
 kubectl apply -f ./local/components/pubsub.yaml --wait=true --namespace $AZURE_ENV_NAME
@@ -481,7 +650,7 @@ NAMESPACE                            NAME                   TYPE          VERSIO
 java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1               2023-05-22 16:55.50  56s
 ```
 
-#### 4.2. Deploy state store component backed Redis
+##### 5.2.2. Deploy state store component backed Redis
 
 ```bash
 kubectl apply -f ./local/components/state.yaml --wait=true --namespace $AZURE_ENV_NAME
@@ -501,7 +670,7 @@ java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1    
 java-banking-pubsub-dapr-sample-dev  money-transfer-state   state.redis   v1               2023-05-22 16:57.46  13s
 ```
 
-### 5. Deploy microservices
+##### 5.2.3. Deploy microservices
 
 Previously, we have setup our cluster, deployed Dapr and its components. Now, we can deploy the microservices.
 
@@ -545,109 +714,4 @@ Deploying services (azd deploy)
 SUCCESS: Your application was deployed to Azure in 12 minutes 13 seconds.
 You can view the resources created under the resource group rg-java-banking-pubsub-dapr-sample-dev in Azure Portal:
 https://portal.azure.com/#@/resource/subscriptions/a3ed6c04-563f-4855-ac84-bdf1e5fbc3fc/resourceGroups/rg-java-banking-pubsub-dapr-sample-dev/overview
-```
-
-### 6. Interact with the application
-
-At this point, you have everything configured in your Azure environment. From here, you can start interacting with the application.
-
-To check if the API is running and healthy, let's get the public api of the `public-api-service` by running the following command:
-
-```bash
-kubectl get service public-api-service -n $AZURE_ENV_NAME
-```
-
-This will output something like this:
-
-```bash
-NAME                 TYPE           CLUSTER-IP   EXTERNAL-IP    PORT(S)        AGE
-public-api-service   LoadBalancer   10.0.54.16   20.8.255.153   80:31319/TCP   2m27s
-```
-
-You can use the `EXTERNAL-IP` to access the API. You can run the following command to set the API endpoint available as environment variable:
-
-```bash
-PUBLIC_API_SERVICE=$(k get svc public-api-service -n $AZURE_ENV_NAME -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
-```
-
-To check if the API is running and healthy, run the following command:
-
-```bash
-curl $PUBLIC_API_SERVICE
-```
-
-This will output something like this:
-
-```bash
-{"message":"Public API Service Started, version: 1.0.0"}
-```
-
-### 7. Test the application
-
-First, you need to create a new account for a user:
-
-```curl
-curl -X POST \
-  $PUBLIC_API_SERVICE/accounts \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "owner": "A",
-    "amount": 100
-}'
-```
-
-This should return the following response:
-
-```json
-{
-  "account":
-  {
-    "owner":"A",
-    "amount":100.0
-  },
-  "message":"Account created for: Owner: A, Amount: 100.0"
-}
-```
-
-An example request to start a new transfer workflow is:
-
-```curl
-curl -X POST \
-  $PUBLIC_API_SERVICE/transfers \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "sender": "A",
-    "receiver": "B",
-    "amount": 100
-}'
-```
-
-This should return the following response:
-
-```json
-{
-  "message":"Transfer Request Started: Sender: A, Receiver: B, Amount: 100.0",
-  "status":"ACCEPTED",
-  "transferId":"14efc"
-}
-```
-
-You can query the status of a transfer:
-
-```curl
-curl -X GET \
-  $PUBLIC_API_SERVICE/transfers/{transferId} \
-  -H 'Content-Type: application/json'
-```
-
-This should return the following response:
-
-```json
-{
-  "sender":"A",
-  "receiver":"B",
-  "amount":100.0,
-  "transferId":"14efc",
-  "status":"COMPLETED"
-}
 ```
