@@ -444,22 +444,175 @@ We are using an in-cluster Redis instance for the pub-sub and state store compon
 kubectl apply -f ./infra/redis.yaml --namespace $AZURE_ENV_NAME --wait=true
 ```
 
-### 4. Deploy PubSub and State Store components
+You can check the Redis installation by running the following command:
 
 ```bash
-# Deploy pub-sub broker component backed by Redis
-kubectl apply -f ./local/components/pubsub.yaml --wait=true --namespace $AZURE_ENV_NAME
+kubectl get pods --namespace $AZURE_ENV_NAME
+```
 
-# Deploy state store component backed Redis
+This will output something like this:
+
+```bash
+NAME               READY   STATUS    RESTARTS      AGE
+redis-master-0     1/1     Running   0             2m50s
+redis-replicas-0   0/1     Running   3 (28s ago)   2m50s
+```
+
+### 4. Deploy PubSub and State Store components
+
+Now, we have an in-cluster Redis instance running. We can deploy the pub-sub and state store components for Dapr.
+
+#### 4.1. Deploy pub-sub broker component backed by Redis
+
+```bash
+kubectl apply -f ./local/components/pubsub.yaml --wait=true --namespace $AZURE_ENV_NAME
+```
+
+You can check the pub-sub broker installation by running the following command:
+
+```bash
+dapr components -k --namespace $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAMESPACE                            NAME                   TYPE          VERSION  SCOPES  CREATED              AGE
+java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1               2023-05-22 16:55.50  56s
+```
+
+#### 4.2. Deploy state store component backed Redis
+
+```bash
 kubectl apply -f ./local/components/state.yaml --wait=true --namespace $AZURE_ENV_NAME
 ```
 
-### 5. Final step: Deploy micro-services
+You can check the pub-sub broker installation by running the following command:
+
+```bash
+dapr components -k --namespace $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAMESPACE                            NAME                   TYPE          VERSION  SCOPES  CREATED              AGE
+java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1               2023-05-22 16:55.50  2m
+java-banking-pubsub-dapr-sample-dev  money-transfer-state   state.redis   v1               2023-05-22 16:57.46  13s
+```
+
+### 5. Deploy microservices
+
+Previously, we have setup our cluster, deployed Dapr and its components. Now, we can deploy the microservices.
+
+Before you start the deployment, you will need to login to Azure Container Registry (ACR) to be able to push the images. To do so, run the following command.
+This command logs in to an Azure Container Registry through the Docker CLI. Docker must be installed on your machine. Once done, use 'docker logout <registry url>' to log out. (If you only need an access token and do not want to install Docker, specify '--expose-token').
+
+```bash
+az acr login --name $AZURE_CONTAINER_REGISTRY_NAME
+```
+
+This will output something like this:
+
+```bash
+Login Succeeded
+```
+
+This command deploys all services defined in `azure.yaml` files in the namespace defined by the environment name, based on their individual deployment under `manifests` folder by `azd` convention.
 
 ```bash
 azd deploy
 ```
 
-This command deploys all services defined in `azure.yaml` files in the namespace defined by the environment name, based on their individual deployment manifests.
+This will output something like this:
+
+```bash
+Deploying services (azd deploy)
+
+  (✓) Done: Deploying service account-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service fraud-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service notification-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service public-api-service
+  - Endpoint: http://20.229.248.100, (Service, Type: LoadBalancer)
+
+
+SUCCESS: Your application was deployed to Azure in 12 minutes 13 seconds.
+You can view the resources created under the resource group rg-java-banking-pubsub-dapr-sample-dev in Azure Portal:
+https://portal.azure.com/#@/resource/subscriptions/a3ed6c04-563f-4855-ac84-bdf1e5fbc3fc/resourceGroups/rg-java-banking-pubsub-dapr-sample-dev/overview
+```
+
+### 6. Interact with the application
 
 At this point, you have everything configured in your Azure environment. From here, you can start interacting with the application.
+
+To check if the API is running and healthy, let's get the public api of the `public-api-service` by running the following command:
+
+```bash
+kubectl get service public-api-service -n $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAME                 TYPE           CLUSTER-IP   EXTERNAL-IP    PORT(S)        AGE
+public-api-service   LoadBalancer   10.0.54.16   20.8.255.153   80:31319/TCP   2m27s
+```
+
+You can use the `EXTERNAL-IP` to access the API. You can run the following command to set the API endpoint available as environment variable:
+
+```bash
+PUBLIC_API_SERVICE=$(k get svc public-api-service -n $AZURE_ENV_NAME -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+To check if the API is running and healthy, run the following command:
+
+```bash
+curl $PUBLIC_API_SERVICE
+```
+
+This will output something like this:
+
+```bash
+{"message":"Public API Service Started, version: 1.0.0"}
+```
+
+### 7. Test the application
+
+First, you need to create a new account for a user:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/accounts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "owner": "A",
+    "amount": 100
+}'
+```
+
+An example request to start a new transfer workflow is:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/transfers \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sender": "A",
+    "receiver": "B",
+    "amount": 100
+}'
+```
+
+You can query the status of a transfer:
+
+```curl
+curl -X GET \
+  http://localhost:8080/transfers/{transferId} \
+  -H 'Content-Type: application/json'
+```
