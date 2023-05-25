@@ -93,7 +93,7 @@ Your local cluster will be laid out as follows:
 
 ### 2. Dapr Dashboard & Components
 
-You can validate that the setup finished successfully by navigating to <http://localhost:9000>. This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your default browser. This assumes you installed [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/) in your local machine.
+This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your default browser. This assumes you installed [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/) in your local machine. You can validate that the setup finished successfully by navigating to <http://localhost:9000>.
 
 ```bash
 make dapr-dashboard
@@ -123,7 +123,7 @@ By convention, every service under `/src` folder has 2 files:
 To deploy all services to the cluster, run the following command under `scripts` folder:
 
 ```bash
-make deploy
+make deploy-local
 ```
 
 The deployment script will do the following:
@@ -216,7 +216,7 @@ kube-system          kube-scheduler-azd-aks-control-plane            1/1     Run
 local-path-storage   local-path-provisioner-684f458cdd-wtmqh         1/1     Running   0              172m
 ```
 
-### 4. Connecting to Public API Service
+### 4. Interacting with the Application
 
 [Public API](/src/public-api-service) is deployed as `Loadbalancer` service type. In local cluster setup, it will not able to get public IP to connect.
 Instead, you can access this service locally using the Kubectl proxy tool.
@@ -227,11 +227,36 @@ make port-forward-local
 
 While this command is running, you can access the service at <http://localhost:8080>.
 
+First, you need to create a new account for a user:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/accounts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "owner": "A",
+    "amount": 100
+}'
+```
+
+This should return the following response:
+
+```json
+{
+  "account":
+  {
+    "owner":"A",
+    "amount":100.0
+  },
+  "message":"Account created for: Owner: A, Amount: 100.0"
+}
+```
+
 An example request to start a new transfer workflow is:
 
 ```curl
 curl -X POST \
-  http://localhost:8080/transfers \
+  $PUBLIC_API_SERVICE/transfers \
   -H 'Content-Type: application/json' \
   -d '{
     "sender": "A",
@@ -240,12 +265,34 @@ curl -X POST \
 }'
 ```
 
+This should return the following response:
+
+```json
+{
+  "message":"Transfer Request Started: Sender: A, Receiver: B, Amount: 100.0",
+  "status":"ACCEPTED",
+  "transferId":"14efc"
+}
+```
+
 You can query the status of a transfer:
 
 ```curl
 curl -X GET \
-  http://localhost:8080/transfers/{transferId} \
+  $PUBLIC_API_SERVICE/transfers/{transferId} \
   -H 'Content-Type: application/json'
+```
+
+This should return the following response:
+
+```json
+{
+  "sender":"A",
+  "receiver":"B",
+  "amount":100.0,
+  "transferId":"14efc",
+  "status":"COMPLETED"
+}
 ```
 
 ### 5. Delete Local Cluster
@@ -263,7 +310,6 @@ make clean
 - [X] Deposit workflow starts
   - [X] Fraud service checks the legitimacy of the operation and triggers [VALIDATED(Sender: A, Amount: 100, Receiver:B)]
   - [X] Account service checks if `Sender` has enough funds and triggers [APPROVED(Sender: A, Amount: 100, Receiver: B)]
-  - [ ] Notification services notifies both `Sender` and `Receiver`.
 - [X] Public API can be used to check if there is a confirmation of the money transfer request.
 
 ## How To
@@ -296,42 +342,63 @@ Get all keys in the state store:
 keys *
 ```
 
-# Azure Deployment [WIP]
+## Azure Deployment
 
-It's possible to deploy this application through Azure Developer (azd) CLI. azd is responsible for resource provision and application deployment requiring minimal interaction with azure in a developer point of view.
+It's possible to deploy this application through [Azure Developer (azd) CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/overview). `azd` is responsible for resource provision and application deployment requiring minimal interaction with Azure Portal.
 
-**The option for deploying everything with `azd up` is still a work in progress.** Currently a manual flow with `azd provision` and `azd deploy` is still required, as DAPR and Redis have to be installed in the cluster prior to the services to be deployed.
+For more information of `azd` CLI and how to [Make your project azd-compatible](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/make-azd-compatible?pivots=azd-create)
 
-For more information of azd CLI: [Make your project azd-compatible](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/make-azd-compatible?pivots=azd-create)
+### Pre-requisites
 
-## Pre-requisites
 The following are available in the devContainer environment:
+
 - Azure Developer CLI
 - Azure CLI with K8s-extension enabled
 
-The following have to be registered in the azure subscription after logining in
-- AKS-ExtensionManager and AKS-Dapr features 
+The following have to be registered in the azure subscription after signing in:
+
+- AKS-ExtensionManager and AKS-Dapr features
 - Kubernetes and ContainerService resource providers
+
+First, make sure you have signed in to Azure CLI:
+
+```bash
+az login
+```
+
+Then, set the subscription you want to use:
+
+```bash
+az account set --subscription <subscription-id>
+```
+
+When your subscription is set, you can check the current registration status of the features and resource providers:
+
+```bash
+az feature list --query "[?name=='Microsoft.ContainerService/AKS-Dapr' || name=='Microsoft.ContainerService/AKS-ExtensionManager'].{Name:name,State:properties.state}" --output table
+```
+
+Then, register the features and resource providers:
 
 ```bash
 # register AKS-ExtensionManager and AKS-Dapr resource provider
 az feature register --namespace "Microsoft.ContainerService" --name "AKS-ExtensionManager"
 az feature register --namespace "Microsoft.ContainerService" --name "AKS-Dapr"
 
-# check if features registration is completed
-az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AKS-ExtensionManager')].{Name:name,State:properties.state}"
-az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AKS-Dapr')].{Name:name,State:properties.state}"
-
-# refresh the resource providers for Kubernetes and ContainerService
+# invoke the resource providers for Kubernetes and ContainerService to propagate the registration
 az provider register --namespace Microsoft.KubernetesConfiguration
 az provider register --namespace Microsoft.ContainerService
 ```
 
-## 1. Initiate azd environment
+### 1. Initiate Environment
+
+We are going to use `java-banking-pubsub-dapr-sample` as the environment name for this sample. To initiate an `azd` environment, run the following command:
+
 ```bash
-azd init
+azd init --environment java-banking-pubsub-dapr-sample
 ```
-When issuing the command above, azd asks for an azure subscription, environment name and geo-location. It also adds folders to your project to store the environment variables it creates along the deployment process
+
+The above command also adds folders to your project to store the environment variables it creates along the deployment process
 
 ```txt
 ├── .azure                     [ For storing Azure configurations]
@@ -340,15 +407,257 @@ When issuing the command above, azd asks for an azure subscription, environment 
 │      └── config.json         [ Contains environment configuration ]
 ```
 
-## 2. Provision of Resources
+### 2. Resource Provision and Deploy
+
+By just running `azd up`, azd will provision all the resources needed for this sample and deploy the application to the cluster.
+This command combines `azd provision` and `azd deploy` to achieve this. 
+
+When issuing the command below, you need to select an Azure Subscription and Location.
+Also while installing Dapr post-provision, you need to approve the installation of Dapr components interactively.
+
+```bash
+azd up
+```
+
+This will output something like this:
+
+```bash
+......
+
+Packaging services (azd package)
+
+  (✓) Done: Packaging service account-service
+  - Image Hash: sha256:f03ab78c43152afac5263975208301b994f328195741c5ae3cba407854c7722a
+  - Image Tag: java-banking-pubsub-dapr-sample/account-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851734
+  (✓) Done: Packaging service fraud-service
+  - Image Hash: sha256:7aa3ed7fdd27394d7bb9990c363b477f2ab0e7a9487338cc7f45203d00c3df7b
+  - Image Tag: java-banking-pubsub-dapr-sample/fraud-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851737
+  (✓) Done: Packaging service notification-service
+  - Image Hash: sha256:303bb6b3638f512601d99abba03b14ce74041e945abe8c9ba5a09623e57f518c
+  - Image Tag: java-banking-pubsub-dapr-sample/notification-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851740
+  (✓) Done: Packaging service public-api-service
+  - Image Hash: sha256:b4dcc470a2482b80cc97f2c21a1dd704c8a357c10d31c7b7f48c26ba4a39ae4d
+  - Image Tag: java-banking-pubsub-dapr-sample/public-api-service-java-banking-pubsub-dapr-sample:azd-deploy-1684851744
+
+  ......
+
+  ✓) Done: Resource group: rg-java-banking-pubsub-dapr-sample
+  (✓) Done: Key vault: kv-5jkc2ah3kbvqw
+  (✓) Done: Container Registry: cr5jkc2ah3kbvqw
+  (✓) Done: AKS Managed Cluster: aks-5jkc2ah3kbvqw
+Executing postprovision hook => ./infra/dapr-install.sh
+📀 - Post-Provision hook - Installing DAPR AKS...
+Merged "aks-5jkc2ah3kbvqw" as current context in /Users/mahmutcanga/.kube/config
+
+......
+
+- Creating java-banking-pubsub-dapr-sample namespace...
+namespace/java-banking-pubsub-dapr-sample created
+
+🚀 Deploy Redis on AKS
+
+serviceaccount/redis created
+secret/redis created
+configmap/redis-configuration created
+configmap/redis-health created
+configmap/redis-scripts created
+service/redis-headless created
+service/redis-master created
+service/redis-replicas created
+statefulset.apps/redis-master created
+statefulset.apps/redis-replicas created
+
+🚀 Deploy pub-sub broker component backed by Redis
+
+component.dapr.io/money-transfer-pubsub created
+
+🚀 Deploy state store component backed Redis
+
+component.dapr.io/money-transfer-state created
+
+
+Deploying services (azd deploy)
+
+  (✓) Done: Deploying service account-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service fraud-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service notification-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service public-api-service
+  - Endpoint: http://20.101.13.7, (Service, Type: LoadBalancer)
+
+
+SUCCESS: Your application was provisioned and deployed to Azure in 16 minutes 19 seconds.
+
+```
+
+The Azure Developer CLI supports various extension points to customize your workflows and deployments. The hooks middleware allows you to execute custom scripts before and after azd commands and service lifecycle events. In our setup, we are using `postprovision` hook to install:
+
+- Dapr
+- Redis
+- Dapr Redis State Store
+- Dapr Redis Pub/Sub
+
+### 3. Interact with the application
+
+At this point, you have everything configured in your Azure environment. From here, you can start interacting with the application.
+
+The environment variables created along the deployment process could be used to interact with the application. You can run the following command to set the environment variables:
+
+```bash
+source <(azd env get-values)
+```
+
+To check if the API is running and healthy, let's get the public api of the `public-api-service` by running the following command:
+
+```bash
+kubectl get service public-api-service -n $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAME                 TYPE           CLUSTER-IP   EXTERNAL-IP    PORT(S)        AGE
+public-api-service   LoadBalancer   10.0.54.16   20.8.255.153   80:31319/TCP   2m27s
+```
+
+You can use the `EXTERNAL-IP` to access the API. You can run the following command to set the API endpoint available as environment variable:
+
+```bash
+PUBLIC_API_SERVICE=$(k get svc public-api-service -n $AZURE_ENV_NAME -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+To check if the API is running and healthy, run the following command:
+
+```bash
+curl $PUBLIC_API_SERVICE
+```
+
+This will output something like this:
+
+```bash
+{"message":"Public API Service Started, version: 1.0.0"}
+```
+
+### 4. Test the application
+
+First, you need to create a new account for a user:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/accounts \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "owner": "A",
+    "amount": 100
+}'
+```
+
+This should return the following response:
+
+```json
+{
+  "account":
+  {
+    "owner":"A",
+    "amount":100.0
+  },
+  "message":"Account created for: Owner: A, Amount: 100.0"
+}
+```
+
+An example request to start a new transfer workflow is:
+
+```curl
+curl -X POST \
+  $PUBLIC_API_SERVICE/transfers \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sender": "A",
+    "receiver": "B",
+    "amount": 100
+}'
+```
+
+This should return the following response:
+
+```json
+{
+  "message":"Transfer Request Started: Sender: A, Receiver: B, Amount: 100.0",
+  "status":"ACCEPTED",
+  "transferId":"14efc"
+}
+```
+
+You can query the status of a transfer:
+
+```curl
+curl -X GET \
+  $PUBLIC_API_SERVICE/transfers/{transferId} \
+  -H 'Content-Type: application/json'
+```
+
+This should return the following response:
+
+```json
+{
+  "sender":"A",
+  "receiver":"B",
+  "amount":100.0,
+  "transferId":"14efc",
+  "status":"COMPLETED"
+}
+```
+
+### 5. Clean up
+
+This will delete all the resources created by azd, including the resource group created for this sample by running the following command:
+
+```bash
+azd down --force --purge
+```
+
+This will output something like this:
+
+```bash
+Deleting all resources and deployed code on Azure (azd down)
+Local application code is not deleted when running 'azd down'.
+
+Deleting your resources can take some time.
+
+  (✓) Done: Deleting resource group: rg-java-banking-pubsub-dapr-sample-dev
+
+  (✓) Done: Purging key vault: kv-wrxjknyqx2vrk
+
+SUCCESS: Your application was removed from Azure in 11 minutes 13 seconds.
+```
+
+### 6. Manual Provisioning
+
+Alternatively, you can provision and deploy the application manually without the hook if you'd require further customization in your workflow.
+
 To deploy all the resources needed for this sample, run the following
+
 ```bash
 azd provision
 ```
+
 This will set up a dedicated resource group in your subscription with a clean AKS cluster, a Container Registry for the cluster to pull images from, and a Keyvault for secrets' storage (needed for the AKS deployed through azd).
 
-## 3. Install Dapr and Redis on the Cluster
+#### 6.1. Install Dapr and Redis on the Cluster
+
 The variables used on the following commands are generated by azd and stored in `.azure/<your_env_name>/.env`
+
+To use these environment variables, you can run the following command:
+
+```bash
+source <(azd env get-values)
+```
+
 ```bash
 # Install DAPR on AKS Cluster
 az k8s-extension create --cluster-type managedClusters \
@@ -356,30 +665,161 @@ az k8s-extension create --cluster-type managedClusters \
   --resource-group $AZURE_RESOURCE_GROUP_NAME \
   --name myDaprExtension \
   --extension-type Microsoft.Dapr
+```
 
-# check the status of Dapr installation
+To connect to the cluster and run other steps, update your current context of `kubectl` by running the following command:
+
+```bash
+az aks get-credentials --resource-group $AZURE_RESOURCE_GROUP_NAME --name $AZURE_AKS_CLUSTER_NAME
+```
+
+To check if Dapr is installed, run the following command:
+
+```bash
 kubectl get pods -n dapr-system
+```
 
-# create a namespace for the application
+This will output something like this:
+
+```bash
+NAME                                    READY   STATUS    RESTARTS   AGE
+dapr-dashboard-7798c78c74-4ddw5         1/1     Running   0          5m9s
+dapr-operator-8955455bf-6qs79           1/1     Running   0          5m9s
+dapr-placement-server-0                 1/1     Running   0          5m9s
+dapr-sentry-69c8464dc9-6rtkf            1/1     Running   0          5m9s
+dapr-sidecar-injector-fcbc4b979-wcjmj   1/1     Running   0          5m9s
+```
+
+We will deploy the application to its own namespace. Run following command to create a namespace for the application:
+
+```bash
 kubectl create namespace $AZURE_ENV_NAME
+```
 
-# deploy Redis on AKS
+Check if the namespace is created:
+
+```bash
+kubectl get namespace
+```
+
+This will output something like this:
+
+```bash
+NAME                                  STATUS   AGE
+dapr-system                           Active   6m48s
+default                               Active   122m
+gatekeeper-system                     Active   121m
+java-banking-pubsub-dapr-sample-dev   Active   25s   // <--- This is the namespace we created using $AZURE_ENV_NAME
+kube-node-lease                       Active   122m
+kube-public                           Active   122m
+kube-system                           Active   122m
+```
+
+We are using an in-cluster Redis instance for the pub-sub and state store components. To deploy Redis, run the following command:
+
+```bash
 kubectl apply -f ./infra/redis.yaml --namespace $AZURE_ENV_NAME --wait=true
 ```
 
-## 4. Deploy PubSub and State Store components
-```bash
-# Deploy pub-sub broker component backed by Redis
-kubectl apply -f ./local/components/pubsub.yaml --wait=true --namespace $AZURE_ENV_NAME
+You can check the Redis installation by running the following command:
 
-# Deploy state store component backed Redis
+```bash
+kubectl get pods --namespace $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAME               READY   STATUS    RESTARTS      AGE
+redis-master-0     1/1     Running   0             2m50s
+redis-replicas-0   0/1     Running   3 (28s ago)   2m50s
+```
+
+#### 6.2. Deploy PubSub and State Store components
+
+Now, we have an in-cluster Redis instance running. We can deploy the pub-sub and state store components for Dapr.
+
+##### 6.2.1. Deploy pub-sub broker component backed by Redis
+
+```bash
+kubectl apply -f ./local/components/pubsub.yaml --wait=true --namespace $AZURE_ENV_NAME
+```
+
+You can check the pub-sub broker installation by running the following command:
+
+```bash
+dapr components -k --namespace $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAMESPACE                            NAME                   TYPE          VERSION  SCOPES  CREATED              AGE
+java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1               2023-05-22 16:55.50  56s
+```
+
+##### 6.2.2. Deploy state store component backed Redis
+
+```bash
 kubectl apply -f ./local/components/state.yaml --wait=true --namespace $AZURE_ENV_NAME
 ```
 
-## 5. Final step: Deploy micro-services
+You can check the state store component installation by running the following command:
+
+```bash
+dapr components -k --namespace $AZURE_ENV_NAME
+```
+
+This will output something like this:
+
+```bash
+NAMESPACE                            NAME                   TYPE          VERSION  SCOPES  CREATED              AGE
+java-banking-pubsub-dapr-sample-dev  money-transfer-pubsub  pubsub.redis  v1               2023-05-22 16:55.50  2m
+java-banking-pubsub-dapr-sample-dev  money-transfer-state   state.redis   v1               2023-05-22 16:57.46  13s
+```
+
+##### 6.2.3. Deploy microservices
+
+Previously, we have setup our cluster, deployed Dapr and its components. Now, we can deploy the microservices.
+
+Before you start the deployment, you will need to login to Azure Container Registry (ACR) to be able to push the images. To do so, run the following command.
+This command logs in to an Azure Container Registry through the Docker CLI. Docker must be installed on your machine. Once done, use 'docker logout <registry url>' to log out. (If you only need an access token and do not want to install Docker, specify '--expose-token').
+
+```bash
+az acr login --name $AZURE_CONTAINER_REGISTRY_NAME
+```
+
+This will output something like this:
+
+```bash
+Login Succeeded
+```
+
+This command deploys all services defined in `azure.yaml` file in the namespace defined by the environment name, based on their individual deployment under `manifests` folder by `azd` convention.
+
 ```bash
 azd deploy
 ```
-This command deploys all services defined in `azure.yaml` files in the namespace defined by the environment name, based on their individual deployment manifests. 
 
-At this point, you have everything configured in your Azure environment. From here, you can start interacting with the application.
+This will output something like this:
+
+```bash
+Deploying services (azd deploy)
+
+  (✓) Done: Deploying service account-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service fraud-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service notification-service
+  - Endpoint: http://None:80, (Service, Type: ClusterIP)
+
+  (✓) Done: Deploying service public-api-service
+  - Endpoint: http://20.229.248.100, (Service, Type: LoadBalancer)
+
+
+SUCCESS: Your application was deployed to Azure in 12 minutes 13 seconds.
+You can view the resources created under the resource group rg-java-banking-pubsub-dapr-sample-dev in Azure Portal:
+https://portal.azure.com/#@/resource/subscriptions/a3ed6c04-563f-4855-ac84-bdf1e5fbc3fc/resourceGroups/rg-java-banking-pubsub-dapr-sample-dev/overview
+```
