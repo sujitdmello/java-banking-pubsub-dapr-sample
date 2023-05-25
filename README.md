@@ -230,7 +230,7 @@ make port-forward-local
 While this command is running, you can access the service at <http://localhost:8080>.
 
 ```bash
-set PUBLIC_API_SERVICE=http://localhost:8080
+export PUBLIC_API_SERVICE=http://localhost:8080
 ```
 
 First, you need to create a new account for a user:
