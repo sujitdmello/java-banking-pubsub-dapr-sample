@@ -407,7 +407,7 @@ The above command also adds folders to your project to store the environment var
 │      └── config.json         [ Contains environment configuration ]
 ```
 
-### 2. Up & Running
+### 2. Resource Provision and Deploy
 
 By just running `azd up`, azd will provision all the resources needed for this sample and deploy the application to the cluster.
 This command combines `azd provision` and `azd deploy` to achieve this. 
