@@ -2,14 +2,10 @@ package com.azdaks.notificationservice.controller;
 
 import io.dapr.Topic;
 import io.dapr.client.DaprClient;
-import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.CloudEvent;
-import io.dapr.client.domain.GetStateRequest;
-import io.dapr.client.domain.State;
-import okhttp3.Request;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +26,13 @@ public class TransferEventController {
     private static final String TRANSFER_SUBSCRIBED_TOPIC_NAME = "approved";
     private static final String STATE_TOPIC_NAME = "state";
 
-    private final DaprClient client = new DaprClientBuilder().build();
+    @Autowired
+    DaprClient client;
 
     @Topic(name = TRANSFER_SUBSCRIBED_TOPIC_NAME, pubsubName = PUBSUB_NAME)
     @PostMapping(path = "/transfers", consumes = MediaType.ALL_VALUE)
-    public Mono<ResponseEntity> handleTransferRequest(@RequestBody(required = false) CloudEvent<TransferRequest> cloudEvent) {
+    public Mono<ResponseEntity> handleTransferRequest(
+            @RequestBody(required = false) CloudEvent<TransferRequest> cloudEvent) {
         return Mono.fromSupplier(() -> {
             try {
                 logger.info("Notification service transfer request received: " + cloudEvent.getData().toString());
@@ -48,7 +46,6 @@ public class TransferEventController {
 
                 logger.info("Publishing state request: " + stateRequest);
                 publishStateRequest(stateRequest, "COMPLETED");
-                
 
                 return ResponseEntity.ok("SUCCESS");
 
