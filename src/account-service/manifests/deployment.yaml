@@ -32,3 +32,10 @@ spec:
             - name: AZURE_CLIENT_ID
               value: ${AZURE_AKS_IDENTITY_CLIENT_ID}
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "512m"
+              memory: "512Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
