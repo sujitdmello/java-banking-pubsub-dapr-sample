@@ -239,7 +239,7 @@ First, you need to create a new account for a user:
 
 ```curl
 curl -X POST \
-  http://localhost:8080/accounts \
+  $PUBLIC_API_SERVICE/accounts \
   -H 'Content-Type: application/json' \
   -d '{
     "owner": "A",
@@ -264,7 +264,7 @@ An example request to start a new transfer workflow is:
 
 ```curl
 curl -X POST \
-  http://localhost:8080/transfers \
+  $PUBLIC_API_SERVICE/transfers \
   -H 'Content-Type: application/json' \
   -d '{
     "sender": "A",
@@ -287,7 +287,7 @@ You can query the status of a transfer:
 
 ```curl
 curl -X GET \
-  http://localhost:8080/transfers/{transferId} \
+  $PUBLIC_API_SERVICE/transfers/{transferId} \
   -H 'Content-Type: application/json'
 ```
 
