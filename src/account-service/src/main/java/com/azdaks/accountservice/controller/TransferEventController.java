@@ -6,6 +6,7 @@ import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.CloudEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +31,8 @@ public class TransferEventController {
     private static final String STATE_STORE = "money-transfer-state";
     private static final String ACCOUNT_UPDATE_TOPIC = "account-update";
 
-    private final DaprClient client = new DaprClientBuilder().build();
+    @Autowired
+    DaprClient client;
 
     @Topic(name = TRANSFER_SUBSCRIBED_TOPIC_NAME, pubsubName = PUBSUB_NAME)
     @PostMapping(path = "/transfers", consumes = MediaType.ALL_VALUE)
