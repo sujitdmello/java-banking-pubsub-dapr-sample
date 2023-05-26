@@ -28,7 +28,7 @@ public class AccountsController {
     private static final String TOPIC_NAME = "deposit";
     private static final String ACCOUNT_UPDATE_TOPIC = "account-update";
 
-    private static final Logger logger = LoggerFactory.getLogger(TransfersController.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AccountsController.class.getName());
 
     @Autowired
     DaprClient client;
