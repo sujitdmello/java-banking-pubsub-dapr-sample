@@ -23,7 +23,7 @@ public class StatesController {
     private static final String SUBSCRIBED_TOPIC_NAME = "state";
     private static final String STATE_STORE = "money-transfer-state";
 
-    private static final Logger logger = LoggerFactory.getLogger(TransfersController.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(StatesController.class.getName());
 
     @Autowired
     DaprClient client;
