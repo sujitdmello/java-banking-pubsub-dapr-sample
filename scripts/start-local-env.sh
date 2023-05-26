@@ -26,7 +26,7 @@ kubectl apply -f ./local/deployments/config-map.yaml --wait=true
 
 printf '\n📀 Deploy Redis\n\n'
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install redis bitnami/redis
+helm install redis -n default --set architecture=standalone bitnami/redis
 
 printf '\n📀 Init Dapr\n\n'
 dapr init --kubernetes --wait --timeout 600

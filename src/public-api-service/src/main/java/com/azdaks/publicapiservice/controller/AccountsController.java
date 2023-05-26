@@ -1,6 +1,8 @@
 package com.azdaks.publicapiservice.controller;
 
 import com.azdaks.publicapiservice.model.CreateAccountResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,11 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.azdaks.publicapiservice.model.AccountResponse;
 import com.azdaks.publicapiservice.model.CreateAccountRequest;
-import com.azdaks.publicapiservice.model.TransferResponse;
-
 import io.dapr.Topic;
 import io.dapr.client.DaprClient;
-import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.CloudEvent;
 import reactor.core.publisher.Mono;
 
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AccountsController {
-    
+
     private static final String STATE_STORE = "money-transfer-state";
     private static final String PUBSUB_NAME = "money-transfer-pubsub";
     private static final String TOPIC_NAME = "deposit";
@@ -31,7 +30,8 @@ public class AccountsController {
 
     private static final Logger logger = LoggerFactory.getLogger(TransfersController.class.getName());
 
-    private final DaprClient client = new DaprClientBuilder().build();
+    @Autowired
+    DaprClient client;
 
     // Create Transfer Request Endpoint
     @PostMapping(path = "/accounts", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -71,14 +71,16 @@ public class AccountsController {
 
     @Topic(name = ACCOUNT_UPDATE_TOPIC, pubsubName = PUBSUB_NAME)
     @PostMapping(path = "/account-updates", consumes = MediaType.ALL_VALUE)
-    public Mono<ResponseEntity> handleAccountRequest(@RequestBody(required = false) CloudEvent<CreateAccountRequest> cloudEvent) {
+    public Mono<ResponseEntity> handleAccountRequest(
+            @RequestBody(required = false) CloudEvent<CreateAccountRequest> cloudEvent) {
         return Mono.fromSupplier(() -> {
             try {
                 logger.info("Account update received: " + cloudEvent.getData().toString());
 
                 var request = cloudEvent.getData();
 
-                logger.info(String.format("Saving to State: Owner: %s, Amount: %,.2f", request.getOwner(), request.getAmount()));
+                logger.info(String.format("Saving to State: Owner: %s, Amount: %,.2f", request.getOwner(),
+                        request.getAmount()));
                 client.saveState(STATE_STORE, request.getOwner(), request.getAmount()).block();
 
                 return ResponseEntity.ok("SUCCESS");

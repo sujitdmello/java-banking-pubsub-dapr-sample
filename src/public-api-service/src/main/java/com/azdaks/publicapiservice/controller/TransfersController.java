@@ -6,10 +6,10 @@ import com.azdaks.publicapiservice.model.TransferResponse;
 import com.azdaks.publicapiservice.model.TransferStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dapr.client.DaprClient;
-import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.domain.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,14 +23,15 @@ public class TransfersController {
 
     private static final Logger logger = LoggerFactory.getLogger(TransfersController.class.getName());
 
-    private final DaprClient client = new DaprClientBuilder().build();
+    @Autowired
+    DaprClient client;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    ObjectMapper objectMapper;
 
     // Create Transfer Request Endpoint
     @PostMapping(path = "/transfers", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TransferResponse> createTransferRequest(@RequestBody TransferRequest transferRequest) {
-
 
         logger.info("Transfer Request Received");
 
@@ -41,12 +42,15 @@ public class TransfersController {
 
         try {
             /**
-             * The official Dapr Java SDK does not support the latest reactor version in Spring Boot 3+
-             * Instead, we go with HTTP client to publish events to Dapr Pub/Sub for Spring Boot 3+
+             * The official Dapr Java SDK does not support the latest reactor version in
+             * Spring Boot 3+
+             * Instead, we go with HTTP client to publish events to Dapr Pub/Sub for Spring
+             * Boot 3+
              * https://github.com/dapr/java-sdk/issues/815
              */
 
-            logger.info("Publishing event to Dapr Pub/Sub Broker: %s, %s".formatted(PUBSUB_NAME, transferRequest.toString()));
+            logger.info("Publishing event to Dapr Pub/Sub Broker: %s, %s".formatted(PUBSUB_NAME,
+                    transferRequest.toString()));
             client.publishEvent(PUBSUB_NAME, TOPIC_NAME, transferRequest).block();
 
             var moneyTransfer = MoneyTransfer.builder()
@@ -59,7 +63,6 @@ public class TransfersController {
 
             logger.info("Publishing event to Dapr State: %s".formatted(STATE_STORE));
             client.saveState(STATE_STORE, transferId, moneyTransfer).block();
-
 
         } catch (Exception e) {
             logger.error("Error publishing message: ");
@@ -87,7 +90,8 @@ public class TransfersController {
 
         try {
             logger.info("Getting state from Dapr State: %s".formatted(STATE_STORE));
-            State<MoneyTransfer> moneyTransferState = client.getState(STATE_STORE, transferId, MoneyTransfer.class).block();
+            State<MoneyTransfer> moneyTransferState = client.getState(STATE_STORE, transferId, MoneyTransfer.class)
+                    .block();
             var moneyTransfer = moneyTransferState.getValue();
 
             logger.info("State: " + moneyTransfer);

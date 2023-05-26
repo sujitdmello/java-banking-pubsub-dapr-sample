@@ -95,11 +95,13 @@ Your local cluster will be laid out as follows:
 
 ### 2. Dapr Dashboard & Components
 
-This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your default browser. This assumes you installed [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/) in your local machine. You can validate that the setup finished successfully by navigating to <http://localhost:9000>.
+This will open the [Dapr dashboard](/docs/dapr-dashboard.png) in your default browser. This assumes you installed [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/) in your local machine. 
 
 ```bash
 make dapr-dashboard
 ```
+
+You can validate that the setup of the dashboard finished successfully by navigating to <http://localhost:9000>.
 
 To verify the installation of pub/sub broker and other components:
 
@@ -228,6 +230,10 @@ make port-forward-local
 ```
 
 While this command is running, you can access the service at <http://localhost:8080>.
+
+```bash
+export PUBLIC_API_SERVICE=http://localhost:8080
+```
 
 First, you need to create a new account for a user:
 

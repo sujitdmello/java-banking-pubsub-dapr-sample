@@ -1,6 +1,5 @@
 package com.azdaks.publicapiservice;
 
-import com.azdaks.publicapiservice.controller.TransfersController;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
